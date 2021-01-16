@@ -2,8 +2,9 @@ package de.trbnb.darts.ui.main
 
 import androidx.databinding.Bindable
 import androidx.lifecycle.viewModelScope
-import com.squareup.inject.assisted.Assisted
-import com.squareup.inject.assisted.AssistedInject
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import de.trbnb.darts.models.Player
 import de.trbnb.darts.players.PlayerRepository
 import de.trbnb.mvvmbase.BaseViewModel
@@ -29,7 +30,7 @@ class PlayerViewModel @AssistedInject constructor(
         }
     }
 
-    @AssistedInject.Factory
+    @AssistedFactory
     interface Factory {
         operator fun invoke(player: Player, selectedListener: (PlayerViewModel) -> Unit): PlayerViewModel
     }

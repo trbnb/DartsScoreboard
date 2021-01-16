@@ -2,11 +2,10 @@ package de.trbnb.darts.logic
 
 import de.trbnb.darts.logic.finish.FinishSuggestionLogic
 import de.trbnb.darts.models.*
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 
 class MatchLogicImpl(override val match: Match) : MatchLogic {
     private var currentPlayerIndex = 0
@@ -21,7 +20,15 @@ class MatchLogicImpl(override val match: Match) : MatchLogic {
 
     override val finishSuggestionLogic = FinishSuggestionLogic(match.matchOptions.outRule)
 
-    override val currentPlayer = MutableStateFlow(match.players[currentPlayerIndex])
+    override val playerOrder = MutableStateFlow(match.players.let { players ->
+        when (match.matchOptions.playerStartOrder) {
+            PlayerStartOrder.AS_GIVEN -> players
+            PlayerStartOrder.SHUFFLE -> players.shuffled()
+        }
+    })
+    override val currentPlayer = MutableStateFlow(playerOrder.value[currentPlayerIndex])
+
+    override val gameEnded = CompletableDeferred<Unit>()
 
     private fun nextPlayer() {
         currentPlayerIndex++
@@ -133,21 +140,30 @@ class MatchLogicImpl(override val match: Match) : MatchLogic {
             true
         } else false
 
+        if (legWon) {
+            playerOrder.value = when (match.matchOptions.playerOrder) {
+                PlayerOrder.SHUFFLE -> playerOrder.value.shuffled()
+                PlayerOrder.WORST_STARTS -> playerOrder.value.sortedByDescending(::remainingPoints)
+            }
+
+            currentPlayerIndex = 0
+        }
+
         when {
-            matchWon -> {}
+            matchWon -> {
+                gameEnded.complete(Unit)
+            }
             //new set
             setWon -> {
                 match.participations.forEach { it.addSet() }
                 currentSet++
                 currentLeg = 0
-                currentPlayerIndex = 0
                 newTurn()
             }
             //new leg
             legWon -> {
                 match.participations.forEach { it[currentSet].addLeg() }
                 currentLeg++
-                currentPlayerIndex = 0
                 newTurn()
             }
             else -> nextPlayer()

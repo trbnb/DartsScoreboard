@@ -19,6 +19,6 @@ class PlayersAdapter : BindingListAdapter<PlayerParticipationViewModel, ItemPlay
 
 @ExperimentalCoroutinesApi
 @BindingAdapter("android:players")
-fun RecyclerView.setPlayers(playerParticipationViewModels: List<PlayerParticipationViewModel>) {
+fun RecyclerView.setPlayers(playerParticipationViewModels: List<PlayerParticipationViewModel>?) {
     (adapter as? PlayersAdapter ?: PlayersAdapter().also { adapter = it }).submitList(playerParticipationViewModels)
 }

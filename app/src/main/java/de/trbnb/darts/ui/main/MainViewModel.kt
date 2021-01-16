@@ -2,9 +2,12 @@ package de.trbnb.darts.ui.main
 
 import androidx.databinding.Bindable
 import androidx.hilt.lifecycle.ViewModelInject
+import dagger.hilt.android.lifecycle.HiltViewModel
 import de.trbnb.darts.logic.MatchFactory
 import de.trbnb.darts.models.InOutRule
 import de.trbnb.darts.models.MatchOptions
+import de.trbnb.darts.models.PlayerOrder
+import de.trbnb.darts.models.PlayerStartOrder
 import de.trbnb.darts.players.PlayerRepository
 import de.trbnb.darts.ui.events.StartMatchEvent
 import de.trbnb.mvvmbase.BaseViewModel
@@ -15,9 +18,11 @@ import de.trbnb.mvvmbase.commands.ruleCommand
 import de.trbnb.mvvmbase.coroutines.CoroutineViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
-class MainViewModel @ViewModelInject constructor(
+@HiltViewModel
+class MainViewModel @Inject constructor(
     playerRepository: PlayerRepository,
     playerViewModelFactory: PlayerViewModel.Factory,
     private val matchFactory: MatchFactory
@@ -62,7 +67,9 @@ class MainViewModel @ViewModelInject constructor(
             sets = sets,
             legs = legs,
             inRule = inRule,
-            outRule = outRule
+            outRule = outRule,
+            playerStartOrder = PlayerStartOrder.SHUFFLE,
+            playerOrder = PlayerOrder.WORST_STARTS
         )
 
         matchFactory.newMatch(selectedPlayers, matchOptions)

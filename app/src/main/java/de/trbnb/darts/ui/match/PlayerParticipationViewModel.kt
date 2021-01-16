@@ -2,8 +2,9 @@ package de.trbnb.darts.ui.match
 
 import androidx.annotation.ColorInt
 import androidx.databinding.Bindable
-import com.squareup.inject.assisted.Assisted
-import com.squareup.inject.assisted.AssistedInject
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import de.trbnb.darts.R
 import de.trbnb.darts.logic.MatchLogic
 import de.trbnb.darts.models.Player
@@ -24,7 +25,7 @@ class PlayerParticipationViewModel @AssistedInject constructor(
 ) : BaseViewModel(), CoroutineViewModel {
     @get:Bindable
     val points by logic.currentPlayer
-        .combine(logic.turn) { player, turn -> player to turn}
+        .combine(logic.turn) { player, turn -> player to turn }
         .map { logic.remainingPoints(player).toString() }
         .toBindable()
 
@@ -52,7 +53,11 @@ class PlayerParticipationViewModel @AssistedInject constructor(
         false -> R.color.black
     }.let(resourceProvider::getColor)
 
-    @AssistedInject.Factory
+    override fun onDestroy() {
+        super.onDestroy()
+    }
+
+    @AssistedFactory
     interface Factory {
         operator fun invoke(logic: MatchLogic, player: Player): PlayerParticipationViewModel
     }

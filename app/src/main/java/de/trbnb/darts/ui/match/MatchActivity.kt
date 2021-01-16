@@ -1,11 +1,14 @@
 package de.trbnb.darts.ui.match
 
+import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 import dagger.hilt.android.AndroidEntryPoint
 import de.trbnb.darts.R
 import de.trbnb.darts.databinding.ActivityMatchBinding
 import de.trbnb.darts.di.HiltMvvmBindingActivity
+import de.trbnb.darts.ui.events.CloseEvent
+import de.trbnb.mvvmbase.events.Event
 
 @Suppress("EXPERIMENTAL_API_USAGE")
 @AndroidEntryPoint
@@ -16,7 +19,15 @@ class MatchActivity : HiltMvvmBindingActivity<MatchViewModel, ActivityMatchBindi
         binding.playerList.post {
             val isScrollable = binding.playerList.isScrollable()
             viewModel.isPlayerListScrollable = isScrollable
-            binding.playerList.isVerticalFadingEdgeEnabled = isScrollable
+            binding.playerList.overScrollMode = if (isScrollable) View.OVER_SCROLL_ALWAYS else View.OVER_SCROLL_NEVER
+        }
+    }
+
+    override fun onEvent(event: Event) {
+        super.onEvent(event)
+
+        when (event) {
+            is CloseEvent -> finish()
         }
     }
 

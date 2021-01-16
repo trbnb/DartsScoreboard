@@ -3,31 +3,41 @@ package de.trbnb.darts.ui.match
 import androidx.annotation.ColorRes
 import androidx.databinding.Bindable
 import androidx.hilt.lifecycle.ViewModelInject
+import dagger.hilt.android.lifecycle.HiltViewModel
 import de.trbnb.darts.*
 import de.trbnb.darts.logic.MatchFactory
 import de.trbnb.darts.logic.TurnState
 import de.trbnb.darts.models.*
+import de.trbnb.darts.ui.events.CloseEvent
 import de.trbnb.darts.vibration.Vibrator
 import de.trbnb.mvvmbase.BaseViewModel
+import de.trbnb.mvvmbase.bindableproperty.beforeSet
 import de.trbnb.mvvmbase.bindableproperty.bindableBoolean
 import de.trbnb.mvvmbase.commands.ruleCommand
 import de.trbnb.mvvmbase.coroutines.CoroutineViewModel
+import de.trbnb.mvvmbase.list.destroyAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import java.util.*
+import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
-class MatchViewModel @ViewModelInject constructor(
+@HiltViewModel
+class MatchViewModel @Inject constructor(
     matchFactory: MatchFactory,
     private val vibrator: Vibrator,
     private val playerParticipationViewModelFactory: PlayerParticipationViewModel.Factory
 ) : BaseViewModel(), CoroutineViewModel {
     private val matchLogic = matchFactory.currentMatch ?: throw IllegalStateException()
 
-    val playerViewModels = matchLogic.match.players
-        .map { playerParticipationViewModelFactory(matchLogic, it) }
-        .bindEvents()
-        .autoDestroy()
+    val playerViewModels by matchLogic.playerOrder
+        .map { players -> players.map { playerParticipationViewModelFactory(matchLogic, it) } }
+        .toBindable()
+        .beforeSet { old, new ->
+            old?.destroyAll()
+            new?.bindEvents()?.autoDestroy()
+        }
 
     val throwViewModels = ThrowNumber.values()
         .map { ThrowViewModel(it, matchLogic) }
@@ -100,6 +110,12 @@ class MatchViewModel @ViewModelInject constructor(
             .filterIsInstance<TurnState.Bust>()
             .onEach { vibrator.vibrateShortly() }
             .launchIn(viewModelScope)
+
+        viewModelScope.launch {
+            matchLogic.gameEnded.await()
+
+            eventChannel(CloseEvent)
+        }
     }
 
     private fun onFieldSelected(field: Field, multiplier: Multiplier) {
