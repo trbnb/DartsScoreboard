@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data>
+        <variable
+            name="vm"
+            type="de.trbnb.darts.ui.main.PlayerViewModel" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        tools:ignore="RtlSymmetry">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/color"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:color="@{vm.player.color}"
+            app:civ_border_width="1dp"
+            app:civ_border_color="?android:textColorSecondary"
+            tools:src="@color/board_red"/>
+
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/checkbox"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:checked="@={vm.selected}"
+            android:text="@{vm.player.name}"
+            tools:text="@tools:sample/first_names"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/color"
+            app:layout_constraintEnd_toStartOf="@id/deleteButton"/>
+
+        <ImageView
+            android:id="@+id/deleteButton"
+            android:layout_width="64dp"
+            android:layout_height="0dp"
+            android:adjustViewBounds="true"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:scaleType="center"
+            android:background="?android:selectableItemBackgroundBorderless"
+            app:clickCommand="@{vm.deleteCommand}"
+            app:tint="@color/board_red"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:src="@drawable/ic_twotone_delete_24"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="vm"
+            type="de.trbnb.darts.ui.match.PlayerParticipationViewModel" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@{vm.player.color}"
+        tools:background="@color/player_green"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp">
+
+        <ImageView
+            android:id="@+id/current_turn"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginStart="4dp"
+            android:tint="@{vm.foregroundColor}"
+            tools:tint="@color/black"
+            app:invisible="@{!vm.currentPlayer}"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:src="@drawable/ic_baseline_double_arrow_24"
+            tools:ignore="ContentDescription,UseAppTint" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/points"
+            android:layout_width="48dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginEnd="4dp"
+            android:gravity="end|center_vertical"
+            android:textSize="20sp"
+            android:text="@{vm.points}"
+            android:textColor="@{vm.foregroundColor}"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+            tools:text="501"/>
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/legs"
+            android:layout_width="12dp"
+            android:layout_height="0dp"
+            app:layout_constraintEnd_toStartOf="@id/points"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginEnd="4dp"
+            android:gravity="end|center_vertical"
+            android:text="@{vm.wonLegs}"
+            android:textColor="@{vm.foregroundColor}"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+            tools:text="1"/>
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/sets"
+            android:layout_width="12dp"
+            android:layout_height="0dp"
+            app:layout_constraintEnd_toStartOf="@id/legs"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginEnd="4dp"
+            android:text="@{vm.wonSets}"
+            android:textColor="@{vm.foregroundColor}"
+            android:gravity="end|center_vertical"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+            tools:text="2"/>
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/average"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            app:layout_constraintEnd_toStartOf="@id/sets"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginEnd="24dp"
+            android:text="@{vm.average}"
+            android:textColor="@{vm.foregroundColor}"
+            android:gravity="end|center_vertical"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            tools:text="Ø 22.22"/>
+
+        <TextView
+            android:id="@+id/name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:fontFamily="sans-serif-condensed"
+            android:textSize="20sp"
+            android:text="@{vm.player.name}"
+            android:textColor="@{vm.foregroundColor}"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+            app:layout_constraintStart_toEndOf="@id/current_turn"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/average"
+            tools:text="@tools:sample/first_names"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

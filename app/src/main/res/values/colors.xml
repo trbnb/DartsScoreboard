@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="transparent">#0000</color>
+
+    <color name="board_white">#D6BB90</color>
+    <color name="board_black">#000</color>
+    <color name="board_red">#BB0F25</color>
+    <color name="board_green">#096B5E</color>
+
+    <color name="player_yellow">#ddaa00</color>
+    <color name="player_red">#cc2222</color>
+    <color name="player_green">#22aa22</color>
+
+    <color name="info_text_red">#d20</color>
+    <color name="info_text_green">#090</color>
+    <color name="info_text_normal">@color/black</color>
+
+    <color name="statusbarColor">@color/board_green</color>
+
+    <color name="finishSuggestionBackground">#da2</color>
+</resources>

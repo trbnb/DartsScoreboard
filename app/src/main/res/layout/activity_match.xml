@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data>
+        <variable
+            name="vm"
+            type="de.trbnb.darts.ui.match.MatchViewModel" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/playerList"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:players="@{vm.playerViewModels}"
+            app:backgroundRes="@{vm.playerListBackgroundRes}"
+            android:elevation="4dp"
+            android:scrollbars="vertical"
+            android:layout_marginBottom="4dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/first_throw"
+            tools:itemCount="6"
+            tools:listitem="@layout/item_player_participation"/>
+
+        <include
+            android:id="@+id/first_throw"
+            layout="@layout/view_throw"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            app:vm="@{vm.throwViewModels.get(0)}"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toTopOf="@id/confirm_button"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/second_throw"/>
+
+        <include
+            android:id="@+id/second_throw"
+            layout="@layout/view_throw"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:vm="@{vm.throwViewModels.get(1)}"
+            app:layout_constraintBottom_toBottomOf="@id/first_throw"
+            app:layout_constraintStart_toEndOf="@id/first_throw"
+            app:layout_constraintEnd_toStartOf="@id/third_throw"/>
+
+        <include
+            android:id="@+id/third_throw"
+            layout="@layout/view_throw"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            app:vm="@{vm.throwViewModels.get(2)}"
+            app:layout_constraintBottom_toBottomOf="@id/first_throw"
+            app:layout_constraintStart_toEndOf="@id/second_throw"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/confirm_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="8dp"
+            app:tint="@color/white"
+            android:src="@drawable/ic_baseline_check_24"
+            app:clickCommand="@{vm.confirmTurnCommand}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/input"
+            tools:ignore="ContentDescription" />
+
+        <TextView
+            android:id="@+id/note"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:gravity="center"
+            app:layout_constraintTop_toTopOf="@id/confirm_button"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/confirm_button"
+            app:layout_constraintBottom_toTopOf="@id/suggestion"
+            android:text="@{vm.info.first}"
+            app:textColorRes="@{vm.info.second}"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle2"
+            tools:text="301 - 45 = 256"/>
+
+        <TextView
+            android:id="@+id/suggestion"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:background="@drawable/background_finish_suggestion"
+            android:gravity="center"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            tools:text="D20\tD20\tBULL"
+            app:invisible="@{vm.finishSuggestion == null}"
+            android:text="@{vm.finishSuggestion}"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="@id/note"
+            app:layout_constraintTop_toBottomOf="@id/note"
+            app:layout_constraintBottom_toBottomOf="@id/confirm_button"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:gravity="center"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:textStyle="italic"
+            android:text="kein Finish möglich"
+            android:visible="@{vm.finishSuggestion == null &amp;&amp; !vm.confirmTurnCommand.enabled}"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="@id/note"
+            app:layout_constraintTop_toTopOf="@id/suggestion"
+            app:layout_constraintBottom_toBottomOf="@id/suggestion"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:orientation="vertical"
+            android:background="?android:windowBackground"
+            android:padding="8dp"
+            android:clipToPadding="false"
+            android:elevation="4dp"
+            android:fields="@{vm.fieldViewModels}"
+            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+            app:spanCount="7"
+            tools:itemCount="63"
+            tools:listitem="@layout/item_field"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>
