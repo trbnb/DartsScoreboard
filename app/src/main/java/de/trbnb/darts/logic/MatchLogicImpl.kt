@@ -12,7 +12,7 @@ class MatchLogicImpl(override val match: Match) : MatchLogic {
         set(value) {
             field = if (value > match.players.lastIndex) 0 else value
 
-            currentPlayer.value = match.players[field]
+            currentPlayer.value = playerOrder.value[field]
         }
 
     private var currentSet = 0
