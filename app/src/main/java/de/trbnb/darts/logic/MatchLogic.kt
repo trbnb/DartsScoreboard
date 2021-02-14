@@ -16,6 +16,7 @@ interface MatchLogic {
     val turnState: Flow<TurnState>
     val remainingPoints: Flow<Int>
     val suggestedFinish: Flow<List<PotentialThrow>?>
+    val suggestedFinishes: Flow<List<List<PotentialThrow>>>
 
     val gameEnded: Deferred<Unit>
 

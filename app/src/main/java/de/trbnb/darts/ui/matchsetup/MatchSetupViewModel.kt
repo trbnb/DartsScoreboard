@@ -37,7 +37,11 @@ class MatchSetupViewModel @Inject constructor(
     var points by bindableInt(301).distinct()
 
     @get:Bindable
-    var legs by bindableInt(1).distinct()
+    var legs by bindableInt(0).distinct()
+
+    @get:Bindable("legs")
+    val legsText: String
+        get() = if (legs == 0) "∞" else legs.toString()
 
     @get:Bindable
     var sets by bindableInt(1).distinct()
@@ -54,7 +58,7 @@ class MatchSetupViewModel @Inject constructor(
         val matchOptions = MatchOptions(
             points = points,
             sets = sets,
-            legs = legs,
+            legs = legs.takeUnless { it == 0 } ?: Int.MAX_VALUE,
             inRule = inRule,
             outRule = outRule,
             playerStartOrder = PlayerStartOrder.SHUFFLE,

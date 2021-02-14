@@ -4,18 +4,21 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.core.content.ContextCompat
 import androidx.core.view.isInvisible
+import androidx.core.view.isVisible
 import androidx.databinding.BindingAdapter
 import androidx.databinding.InverseBindingAdapter
 import androidx.databinding.InverseBindingListener
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.shape.CutCornerTreatment
 import com.google.android.material.shape.RoundedCornerTreatment
 import com.google.android.material.shape.TriangleEdgeTreatment
@@ -40,8 +43,8 @@ fun View.setBackgroundTintRes(@ColorRes colorRes: Int) {
 }
 
 @BindingAdapter("backgroundRes")
-fun View.setBackgroundRes(@ColorRes colorRes: Int) {
-    setBackgroundResource(colorRes)
+fun View.setBackgroundRes(@ColorRes colorRes: Int?) {
+    setBackgroundResource(colorRes ?: return)
 }
 
 @BindingAdapter("textColorRes")
@@ -136,3 +139,15 @@ fun ChipGroup.setDataBindingListener(inverseBindingListener: InverseBindingListe
     })
 }
 
+@BindingAdapter("show")
+fun FloatingActionButton.setShow(show: Boolean) {
+    animate()
+        .translationX(if (show) {
+            0f
+        } else {
+            val (marginStart, marginEnd) = (layoutParams as? ViewGroup.MarginLayoutParams)?.run { marginStart to marginEnd } ?: 0 to 0
+            (measuredWidth + marginStart + marginEnd).toFloat()
+        })
+        .setDuration(500)
+        .start()
+}

@@ -37,7 +37,7 @@ class PlayerParticipationViewModel @AssistedInject constructor(
 
     @get:Bindable("currentPlayer")
     val average: String
-        get() = "Ø " + String.format("%.2f", logic.match[player].average)
+        get() = String.format("%.2f", logic.match[player].average)
 
     @get:Bindable("currentPlayer")
     val wonSets: String
@@ -52,6 +52,8 @@ class PlayerParticipationViewModel @AssistedInject constructor(
         true -> R.color.white
         false -> R.color.black
     }.let(resourceProvider::getColor)
+
+    val showSets = logic.match.matchOptions.sets > 1
 
     override fun onDestroy() {
         super.onDestroy()

@@ -71,8 +71,14 @@ class MatchLogicImpl(override val match: Match) : MatchLogic {
 
     override val suggestedFinish: Flow<List<PotentialThrow>?> = turn.map { turn ->
         val remainingThrows = listOf(turn.first, turn.second, turn.third).count { it == null }
-        finishSuggestionLogic.getOne(remainingPoints(), remainingThrows)
+        finishSuggestionLogic.getOne(remainingPoints(), remainingThrows.takeUnless { it == 0 } ?: 3)
     }.flowOn(Dispatchers.IO)
+
+    override val suggestedFinishes: Flow<List<List<PotentialThrow>>> = turn.map { turn ->
+        val remainingThrows = listOf(turn.first, turn.second, turn.third).count { it == null }
+        finishSuggestionLogic.getAll(remainingPoints(), remainingThrows.takeUnless { it == 0 } ?: 3)
+            .sortedBy { it.size }
+    }
 
     override fun addThrow(_throw: Throw) {
         val oldTurn = turn.value

@@ -2,9 +2,13 @@ package de.trbnb.darts.ui.match
 
 import androidx.annotation.ColorRes
 import androidx.databinding.Bindable
-import androidx.hilt.lifecycle.ViewModelInject
+import androidx.databinding.BindingAdapter
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.trbnb.darts.*
+import de.trbnb.darts.databinding.ItemPossibleFinishBinding
 import de.trbnb.darts.logic.MatchFactory
 import de.trbnb.darts.logic.TurnState
 import de.trbnb.darts.models.*
@@ -16,6 +20,7 @@ import de.trbnb.mvvmbase.bindableproperty.bindableBoolean
 import de.trbnb.mvvmbase.commands.ruleCommand
 import de.trbnb.mvvmbase.coroutines.CoroutineViewModel
 import de.trbnb.mvvmbase.list.destroyAll
+import de.trbnb.mvvmbase.recyclerview.BindingListAdapter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -31,6 +36,8 @@ class MatchViewModel @Inject constructor(
 ) : BaseViewModel(), CoroutineViewModel {
     private val matchLogic = matchFactory.currentMatch ?: throw IllegalStateException()
 
+    val showSets = matchLogic.match.matchOptions.sets > 1
+
     val playerViewModels by matchLogic.playerOrder
         .map { players -> players.map { playerParticipationViewModelFactory(matchLogic, it) } }
         .toBindable()
@@ -45,22 +52,22 @@ class MatchViewModel @Inject constructor(
         .autoDestroy()
 
     @get:Bindable
-    val info by matchLogic.turn
-        .combine(matchLogic.turnState) { turn, state -> turn to state }
-        .map { (turn, state) ->
-            if (state == TurnState.Bust) {
-                return@map "BUST" to R.color.info_text_red
+    val info by matchLogic.remainingPoints
+        .combine(matchLogic.turnState) { remainingPoints, state -> remainingPoints to state }
+        .map { (remainingPoints, state) ->
+            when {
+                state == TurnState.Bust -> "BUST" to R.color.info_text_red
+                remainingPoints == 0 -> "WON" to R.color.info_text_green
+                else -> null
             }
-
-            val remaining = matchLogic.remainingPoints(matchLogic.currentPlayer.value)
-            val scored = turn.value
-            val newRemaining = remaining - scored
-            if (newRemaining == 0) {
-                return@map "WON" to R.color.info_text_green
-            }
-            return@map "$remaining - $scored = $newRemaining" to R.color.info_text_normal
         }
         .toBindable()
+
+    @get:Bindable
+    val remainingPoints by matchLogic.remainingPoints.map(Int::toString).toBindable()
+
+    @get:Bindable
+    val currentTotal by matchLogic.turn.map { it.value.toString() }.toBindable()
 
     @get:Bindable
     val turnState by matchLogic.turnState.toBindable()
@@ -77,16 +84,15 @@ class MatchViewModel @Inject constructor(
         .map { (field, multiplier) -> FieldViewModel(field, multiplier, ::onFieldSelected, matchLogic) }
         .bindEvents()
         .autoDestroy()
-    /*.chunked(7) { tripples -> listOf(tripples.map { it.first }, tripples.map { it.second }, tripples.map { it.third }) }
-        .flatMap { it.flatten() }
-        .map { (field, multiplier) -> FieldViewModel(field, multiplier, ::onFieldSelected, matchLogic, resourceProvider) }
-        .bindEvents()
-        .autoDestroy()*/
 
     @get:Bindable
-    val finishSuggestion by matchLogic.suggestedFinish
-        .map { it?.joinToString(separator = "      ", transform = PotentialThrow::description) }
+    val finishSuggestions by matchLogic.suggestedFinishes
+        .map { it.map(::PossibleFinishViewModel) }
         .toBindable()
+        .beforeSet { old, new ->
+            old?.destroyAll()
+            new?.autoDestroy()
+        }
 
     val confirmTurnCommand = ruleCommand(
         enabledRule = { turnState !is TurnState.Open },
@@ -121,5 +127,24 @@ class MatchViewModel @Inject constructor(
     private fun onFieldSelected(field: Field, multiplier: Multiplier) {
         matchLogic.addThrow(field + multiplier)
     }
+}
+
+class PossibleFinishesAdapter : BindingListAdapter<PossibleFinishViewModel, ItemPossibleFinishBinding>(
+    R.layout.item_possible_finish,
+    object : DiffUtil.ItemCallback<PossibleFinishViewModel>() {
+        override fun areContentsTheSame(oldItem: PossibleFinishViewModel, newItem: PossibleFinishViewModel): Boolean {
+            return oldItem.text == newItem.text
+        }
+
+        override fun areItemsTheSame(oldItem: PossibleFinishViewModel, newItem: PossibleFinishViewModel): Boolean {
+            return oldItem === newItem
+        }
+    }
+)
+
+@BindingAdapter("items")
+fun RecyclerView.setItems(items: List<PossibleFinishViewModel>) {
+    (adapter as? PossibleFinishesAdapter ?: PossibleFinishesAdapter().also { adapter = it })
+        .submitList(items)
 }
 

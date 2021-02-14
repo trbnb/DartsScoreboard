@@ -6,30 +6,15 @@
     <data>
         <variable
             name="vm"
-            type="de.trbnb.darts.ui.match.PlayerParticipationViewModel" />
+            type="de.trbnb.darts.ui.match.MatchViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@{vm.player.color}"
-        tools:background="@color/player_yellow"
+        style="?android:listSeparatorTextViewStyle"
         android:paddingTop="4dp"
         android:paddingBottom="4dp">
-
-        <ImageView
-            android:id="@+id/current_turn"
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:layout_marginStart="4dp"
-            android:tint="@{vm.foregroundColor}"
-            tools:tint="@color/black"
-            app:invisible="@{!vm.currentPlayer}"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            android:src="@drawable/ic_baseline_double_arrow_24"
-            tools:ignore="ContentDescription,UseAppTint" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/points"
@@ -38,14 +23,11 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginEnd="4dp"
-            android:textStyle="bold"
+            android:layout_marginEnd="6dp"
             android:gravity="end|center_vertical"
-            android:textSize="20sp"
-            android:text="@{vm.points}"
-            android:textColor="@{vm.foregroundColor}"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
-            tools:text="501"/>
+            style="?android:listSeparatorTextViewStyle"
+            android:background="@null"
+            android:text="Pts"/>
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/legs"
@@ -56,10 +38,9 @@
             app:layout_constraintBottom_toBottomOf="parent"
             android:layout_marginEnd="4dp"
             android:gravity="end|center_vertical"
-            android:text="@{vm.wonLegs}"
-            android:textColor="@{vm.foregroundColor}"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-            tools:text="1"/>
+            style="?android:listSeparatorTextViewStyle"
+            android:background="@null"
+            android:text="L"/>
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/sets"
@@ -69,12 +50,11 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             android:layout_marginEnd="4dp"
-            android:text="@{vm.wonSets}"
-            android:textColor="@{vm.foregroundColor}"
-            android:gravity="end|center_vertical"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
             android:visible="@{vm.showSets}"
-            tools:text="2"/>
+            android:gravity="end|center_vertical"
+            style="?android:listSeparatorTextViewStyle"
+            android:background="@null"
+            android:text="S"/>
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/average"
@@ -84,30 +64,25 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             android:layout_marginEnd="24dp"
-            android:text="@{vm.average}"
-            android:textColor="@{vm.foregroundColor}"
-            android:gravity="end|center_vertical"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-            tools:text="22.22"/>
+            style="?android:listSeparatorTextViewStyle"
+            android:background="@null"
+            android:text="Ø"
+            android:gravity="end|center_vertical"/>
 
         <TextView
             android:id="@+id/name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
+            android:layout_marginStart="8dp"
             android:layout_marginEnd="4dp"
             android:fontFamily="sans-serif-condensed"
-            android:textSize="20sp"
-            app:bold="@{vm.currentPlayer}"
-            tools:textStyle="bold"
-            android:text="@{vm.player.name}"
-            android:textColor="@{vm.foregroundColor}"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
-            app:layout_constraintStart_toEndOf="@id/current_turn"
+            android:text="Name"
+            style="?android:listSeparatorTextViewStyle"
+            android:background="@null"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/average"
-            tools:text="@tools:sample/first_names"/>
+            app:layout_constraintEnd_toStartOf="@id/average"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

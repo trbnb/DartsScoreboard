@@ -123,7 +123,7 @@
                     app:layout_constraintBottom_toBottomOf="@id/legs_slider"
                     app:layout_constraintStart_toEndOf="@id/legs_label"
                     android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                    android:text="@{String.valueOf(vm.legs)}"
+                    android:text="@{vm.legsText}"
                     tools:text="4"/>
 
                 <com.google.android.material.slider.Slider
@@ -131,9 +131,9 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:valueFrom="1"
+                    android:valueFrom="0"
                     android:stepSize="1"
-                    android:valueTo="10"
+                    android:valueTo="20"
                     tools:value="8"
                     app:value="@={vm.legs}"
                     app:labelBehavior="floating"

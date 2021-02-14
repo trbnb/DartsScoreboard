@@ -13,6 +13,11 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
+        <include
+            android:id="@+id/playerListHeader"
+            layout="@layout/item_player_participation_header"
+            app:layout_constraintTop_toTopOf="parent"/>
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/playerList"
             android:layout_width="match_parent"
@@ -23,7 +28,7 @@
             android:scrollbars="vertical"
             android:layout_marginBottom="4dp"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/playerListHeader"
             app:layout_constraintBottom_toTopOf="@id/first_throw"
             tools:itemCount="6"
             tools:listitem="@layout/item_player_participation"/>
@@ -36,7 +41,7 @@
             android:layout_marginStart="4dp"
             app:vm="@{vm.throwViewModels.get(0)}"
             android:layout_marginBottom="8dp"
-            app:layout_constraintBottom_toTopOf="@id/confirm_button"
+            app:layout_constraintBottom_toTopOf="@id/remaining_points_headline"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@id/second_throw"/>
 
@@ -59,66 +64,131 @@
             app:vm="@{vm.throwViewModels.get(2)}"
             app:layout_constraintBottom_toBottomOf="@id/first_throw"
             app:layout_constraintStart_toEndOf="@id/second_throw"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            app:layout_constraintEnd_toStartOf="@id/confirm_button"/>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/confirm_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
+            android:layout_marginEnd="8dp"
             android:layout_marginBottom="8dp"
             app:tint="@color/white"
             android:src="@drawable/ic_baseline_check_24"
             app:clickCommand="@{vm.confirmTurnCommand}"
+            app:layout_constraintBottom_toBottomOf="@id/first_throw"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/input"
             tools:ignore="ContentDescription" />
 
         <TextView
-            android:id="@+id/note"
+            android:id="@+id/total_headline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:layout_constraintStart_toEndOf="@id/third_throw"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/first_throw"
+            android:gravity="center"
+            android:textSize="13sp"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+            android:text="Total"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toEndOf="@id/third_throw"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/total_headline"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:textSize="24sp"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+            android:text="@{vm.currentTotal}"
+            tools:text="160"/>
+
+        <TextView
+            android:id="@+id/remaining_points_headline"
+            android:layout_width="96dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            app:layout_constraintBottom_toTopOf="@id/remaining_points"
+            app:layout_constraintStart_toStartOf="@id/remaining_points"
+            android:textSize="13sp"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+            android:text="Übrig"/>
+
+        <TextView
+            android:id="@+id/remaining_points"
+            android:layout_width="96dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_marginStart="16dp"
+            android:layout_marginBottom="12dp"
+            app:layout_constraintBottom_toTopOf="@id/input"
+            app:layout_constraintStart_toStartOf="parent"
+            android:textSize="24sp"
+            android:text="@{vm.remainingPoints}"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+            tools:text="1301"/>
+
+        <ImageView
+            android:id="@+id/remaining_chevron"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:src="@drawable/ic_baseline_chevron_right_24"
+            app:layout_constraintStart_toEndOf="@id/remaining_points"
+            app:layout_constraintTop_toTopOf="@id/remaining_points_headline"
+            app:layout_constraintBottom_toBottomOf="@id/remaining_points"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/suggestionsRecyclerView"
+            android:layout_width="0dp"
+            android:layout_height="64dp"
+            android:orientation="horizontal"
+            android:clipToPadding="false"
+            android:paddingStart="16dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintTop_toTopOf="@id/remaining_points_headline"
+            app:layout_constraintBottom_toBottomOf="@id/remaining_points"
+            app:layout_constraintStart_toEndOf="@id/remaining_chevron"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:items="@{vm.finishSuggestions}"
+            tools:listitem="@layout/item_possible_finish"/>
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="0dp"
+            android:background="@drawable/gradient_background_left"
+            app:layout_constraintTop_toTopOf="@id/suggestionsRecyclerView"
+            app:layout_constraintBottom_toBottomOf="@id/suggestionsRecyclerView"
+            app:layout_constraintStart_toStartOf="@id/suggestionsRecyclerView"/>
+
+        <TextView
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:gravity="center"
-            app:layout_constraintTop_toTopOf="@id/confirm_button"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/confirm_button"
-            app:layout_constraintBottom_toTopOf="@id/suggestion"
-            android:text="@{vm.info.first}"
-            app:textColorRes="@{vm.info.second}"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle2"
-            tools:text="301 - 45 = 256"/>
-
-        <TextView
-            android:id="@+id/suggestion"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:background="@drawable/background_finish_suggestion"
-            android:gravity="center"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:textColor="@color/white"
-            android:textStyle="bold"
-            tools:text="D20\tD20\tBULL"
-            app:invisible="@{vm.finishSuggestion == null}"
-            android:text="@{vm.finishSuggestion}"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="@id/note"
-            app:layout_constraintTop_toBottomOf="@id/note"
-            app:layout_constraintBottom_toBottomOf="@id/confirm_button"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:gravity="center"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
+            android:text="Kein Finish möglich!"
             android:textStyle="italic"
-            android:text="kein Finish möglich"
-            android:visible="@{vm.finishSuggestion == null &amp;&amp; !vm.confirmTurnCommand.enabled}"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="@id/note"
-            app:layout_constraintTop_toTopOf="@id/suggestion"
-            app:layout_constraintBottom_toBottomOf="@id/suggestion"/>
+            android:visible="@{vm.finishSuggestions.size() == 0}"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+            app:layout_constraintTop_toTopOf="@id/remaining_points_headline"
+            app:layout_constraintBottom_toBottomOf="@id/remaining_points"
+            app:layout_constraintStart_toEndOf="@id/remaining_chevron"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@id/input"
+            app:layout_constraintTop_toTopOf="@id/suggestionsRecyclerView"
+            android:text="@{vm.info.first}"
+            app:backgroundRes="@{vm.info.second}"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+            android:visible="@{vm.info != null}"
+            tools:text="BUST"
+            tools:visibility="gone"
+            tools:background="@color/info_text_red"/>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/input"
