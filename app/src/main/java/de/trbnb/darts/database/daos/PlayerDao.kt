@@ -1,9 +1,13 @@
 package de.trbnb.darts.database.daos
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.Query
+import androidx.room.Update
 import de.trbnb.darts.models.Player
 import kotlinx.coroutines.flow.Flow
-import java.util.*
+import java.util.UUID
 
 @Dao
 interface PlayerDao {
@@ -21,4 +25,7 @@ interface PlayerDao {
 
     @Query("SELECT * FROM player where player.id = :id")
     suspend fun getById(id: UUID): Player?
+
+    @Query("SELECT * FROM player where player.id IN(:ids)")
+    suspend fun getByIds(ids: List<UUID>): List<Player>
 }

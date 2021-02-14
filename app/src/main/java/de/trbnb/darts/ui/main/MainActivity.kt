@@ -1,6 +1,5 @@
 package de.trbnb.darts.ui.main
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -9,9 +8,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import de.trbnb.darts.R
 import de.trbnb.darts.databinding.ActivityMainBinding
 import de.trbnb.darts.di.HiltMvvmBindingActivity
-import de.trbnb.darts.ui.events.StartMatchEvent
 import de.trbnb.darts.ui.main.newplayer.NewPlayerDialogFragment
-import de.trbnb.darts.ui.match.MatchActivity
+import de.trbnb.darts.ui.matchsetup.MatchSetupActivity
 import de.trbnb.mvvmbase.events.Event
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
@@ -40,7 +38,8 @@ class MainActivity : HiltMvvmBindingActivity<MainViewModel, ActivityMainBinding>
         super.onEvent(event)
 
         when (event) {
-            is StartMatchEvent -> startActivity(Intent(this, MatchActivity::class.java))
+            is MainEvent.ConfigureMatch -> startActivity(MatchSetupActivity.newIntent(this, event.playerIds))
         }
     }
 }
+

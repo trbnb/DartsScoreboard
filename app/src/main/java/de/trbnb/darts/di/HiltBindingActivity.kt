@@ -5,7 +5,7 @@ import de.trbnb.mvvmbase.MvvmBindingActivity
 import de.trbnb.mvvmbase.ViewModel
 import de.trbnb.mvvmbase.utils.findGenericSuperclass
 
-typealias HiltMvvmActivity<VM> = MvvmBindingActivity<VM, ViewDataBinding>
+typealias HiltMvvmActivity<VM> = HiltMvvmBindingActivity<VM, ViewDataBinding>
 
 abstract class HiltMvvmBindingActivity<VM, B> : MvvmBindingActivity<VM, B>
     where VM : ViewModel, VM : androidx.lifecycle.ViewModel, B : ViewDataBinding {

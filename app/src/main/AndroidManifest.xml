@@ -13,6 +13,7 @@
         android:theme="@style/Theme.Darts">
 
         <activity android:name=".ui.match.MatchActivity"/>
+        <activity android:name=".ui.matchsetup.MatchSetupActivity"/>
 
         <activity android:name=".ui.main.MainActivity"
             android:windowSoftInputMode="adjustNothing">
