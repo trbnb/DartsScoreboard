@@ -23,6 +23,7 @@ val MatchParticipation.average: Double
     get() = sets.asSequence()
         .flatMap { it.legs }
         .flatMap { it.turns }
+        .filterNot { it.first?.state == ThrowState.BUST || it.second?.state == ThrowState.BUST || it.third?.state == ThrowState.BUST }
         .filterNot { it.first == null && it.second == null && it.third == null }
         .map { turn ->
             if (turn.first != null && turn.second != null && turn.third != null) {
