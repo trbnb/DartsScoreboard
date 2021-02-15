@@ -3,15 +3,16 @@ package de.trbnb.darts.ui.match
 import androidx.annotation.ColorRes
 import androidx.databinding.Bindable
 import androidx.databinding.BindingAdapter
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.trbnb.darts.*
-import de.trbnb.darts.databinding.ItemPossibleFinishBinding
+import de.trbnb.darts.R
 import de.trbnb.darts.logic.MatchFactory
 import de.trbnb.darts.logic.TurnState
-import de.trbnb.darts.models.*
+import de.trbnb.darts.models.Field
+import de.trbnb.darts.models.Multiplier
+import de.trbnb.darts.models.ThrowNumber
+import de.trbnb.darts.models.plus
+import de.trbnb.darts.models.value
 import de.trbnb.darts.ui.events.CloseEvent
 import de.trbnb.darts.vibration.Vibrator
 import de.trbnb.mvvmbase.BaseViewModel
@@ -20,11 +21,14 @@ import de.trbnb.mvvmbase.bindableproperty.bindableBoolean
 import de.trbnb.mvvmbase.commands.ruleCommand
 import de.trbnb.mvvmbase.coroutines.CoroutineViewModel
 import de.trbnb.mvvmbase.list.destroyAll
-import de.trbnb.mvvmbase.recyclerview.BindingListAdapter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import java.util.*
 import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
@@ -116,6 +120,9 @@ class MatchViewModel @Inject constructor(
             false -> R.color.transparent
         }
 
+    @get:Bindable
+    val canUndoTurn by matchLogic.turn.map { matchLogic.canUndoTurnConfirmation() }.toBindable(defaultValue = false)
+
     init {
         matchLogic.turnState.distinctUntilChanged()
             .filterIsInstance<TurnState.Bust>()
@@ -129,27 +136,10 @@ class MatchViewModel @Inject constructor(
         }
     }
 
+    fun undoTurn() = matchLogic.undoTurnConfirmation()
+
     private fun onFieldSelected(field: Field, multiplier: Multiplier) {
         matchLogic.addThrow(field + multiplier)
     }
-}
-
-class PossibleFinishesAdapter : BindingListAdapter<PossibleFinishViewModel, ItemPossibleFinishBinding>(
-    R.layout.item_possible_finish,
-    object : DiffUtil.ItemCallback<PossibleFinishViewModel>() {
-        override fun areContentsTheSame(oldItem: PossibleFinishViewModel, newItem: PossibleFinishViewModel): Boolean {
-            return oldItem.text == newItem.text
-        }
-
-        override fun areItemsTheSame(oldItem: PossibleFinishViewModel, newItem: PossibleFinishViewModel): Boolean {
-            return oldItem === newItem
-        }
-    }
-)
-
-@BindingAdapter("items")
-fun RecyclerView.setItems(items: List<PossibleFinishViewModel>) {
-    (adapter as? PossibleFinishesAdapter ?: PossibleFinishesAdapter().also { adapter = it })
-        .submitList(items)
 }
 

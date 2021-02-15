@@ -22,9 +22,12 @@ interface MatchLogic {
 
     fun addThrow(_throw: Throw)
     fun fellOff(throwNumber: ThrowNumber, fellOff: Boolean)
-    fun undo()
-    fun remove(throwNumber: ThrowNumber)
+    fun undoThrow()
+    fun removeThrow(throwNumber: ThrowNumber)
     fun confirmTurn()
+
+    fun canUndoTurnConfirmation(): Boolean
+    fun undoTurnConfirmation()
 
     fun currentParticipation(player: Player): Pair<SetParticipation, LegParticipation>
     fun remainingPoints(player: Player): Int

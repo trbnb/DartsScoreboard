@@ -50,7 +50,7 @@ class ThrowViewModel(
 
     val removeCommand = ruleCommand(
         enabledRule = { thisThrow != null },
-        action = { logic.remove(throwNumber) },
+        action = { logic.removeThrow(throwNumber) },
         dependentFields = listOf(::thisThrow)
     )
 }

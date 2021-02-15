@@ -12,5 +12,10 @@ class LegParticipation {
         _turns.add(turn)
     }
 
+    fun removeLast(): Turn? = when {
+        _turns.isEmpty() -> null
+        else -> _turns.removeAt(_turns.lastIndex)
+    }
+
     operator fun get(index: Int) = _turns[index]
 }

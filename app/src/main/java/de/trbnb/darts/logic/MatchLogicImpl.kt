@@ -3,7 +3,6 @@ package de.trbnb.darts.logic
 import de.trbnb.darts.logic.finish.FinishSuggestionLogic
 import de.trbnb.darts.models.*
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 
@@ -103,9 +102,9 @@ class MatchLogicImpl(override val match: Match) : MatchLogic {
         ).let(::reevaluate)
     }
 
-    override fun undo() {
+    override fun undoThrow() {
         val turn = turn.value
-        remove(when {
+        removeThrow(when {
             turn.third != null -> ThrowNumber.THREE
             turn.second != null -> ThrowNumber.TWO
             turn.first != null -> ThrowNumber.ONE
@@ -113,7 +112,7 @@ class MatchLogicImpl(override val match: Match) : MatchLogic {
         })
     }
 
-    override fun remove(throwNumber: ThrowNumber) {
+    override fun removeThrow(throwNumber: ThrowNumber) {
         turn.value = when (throwNumber) {
             ThrowNumber.ONE -> turn.value.copy(first = null)
             ThrowNumber.TWO -> turn.value.copy(second = null)
@@ -224,5 +223,27 @@ class MatchLogicImpl(override val match: Match) : MatchLogic {
         }
 
         return Turn(newFirst, newSecond, newThird)
+    }
+
+    override fun canUndoTurnConfirmation(): Boolean {
+        val previousPlayerIndex = (currentPlayerIndex - 1).takeUnless { it < 0 } ?: match.players.lastIndex
+        val previousPlayer = playerOrder.value[previousPlayerIndex]
+
+        val (_, leg) = currentParticipation(previousPlayer)
+
+        return leg.turns.isNotEmpty()
+    }
+
+    override fun undoTurnConfirmation() {
+        if (!canUndoTurnConfirmation()) return
+
+        val previousPlayerIndex = (currentPlayerIndex - 1).takeUnless { it < 0 } ?: match.players.lastIndex
+
+        val (_, leg) = currentParticipation(playerOrder.value[previousPlayerIndex])
+
+        val lastTurn = leg.removeLast() ?: return
+
+        currentPlayerIndex = previousPlayerIndex
+        turn.value = lastTurn
     }
 }

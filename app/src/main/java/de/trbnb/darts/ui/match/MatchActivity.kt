@@ -1,5 +1,7 @@
 package de.trbnb.darts.ui.match
 
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
@@ -14,6 +16,8 @@ import de.trbnb.mvvmbase.events.Event
 @Suppress("EXPERIMENTAL_API_USAGE")
 @AndroidEntryPoint
 class MatchActivity : HiltMvvmBindingActivity<MatchViewModel, ActivityMatchBinding>(R.layout.activity_match) {
+    private var undoMenuItem: MenuItem? = null
+
     override fun onPostResume() {
         super.onPostResume()
 
@@ -24,11 +28,26 @@ class MatchActivity : HiltMvvmBindingActivity<MatchViewModel, ActivityMatchBindi
         }
     }
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.activity_match, menu)
+        menu.findItem(R.id.undoTurn).apply { undoMenuItem = this }.isEnabled = viewModel.canUndoTurn
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.undoTurn -> viewModel.undoTurn()
+        }
+
+        return super.onOptionsItemSelected(item)
+    }
+
     override fun onViewModelPropertyChanged(viewModel: MatchViewModel, fieldId: Int) {
         super.onViewModelPropertyChanged(viewModel, fieldId)
 
         when (fieldId) {
             BR.currentPlayerIndex -> binding.playerList.smoothScrollToPosition(viewModel.currentPlayerIndex)
+            BR.canUndoTurn -> undoMenuItem?.isEnabled = viewModel.canUndoTurn
         }
     }
 
