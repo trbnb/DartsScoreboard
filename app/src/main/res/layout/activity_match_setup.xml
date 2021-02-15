@@ -62,9 +62,11 @@
 
                 <TextView
                     android:id="@+id/sets_label"
-                    android:layout_width="40dp"
+                    android:layout_width="48dp"
                     android:layout_height="wrap_content"
                     android:gravity="center"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp"
                     android:background="@drawable/background_options_legs_sets"
                     app:layout_constraintTop_toTopOf="@id/sets_slider"
                     app:layout_constraintBottom_toBottomOf="@id/sets_slider"
@@ -103,9 +105,11 @@
 
                 <TextView
                     android:id="@+id/legs_label"
-                    android:layout_width="40dp"
+                    android:layout_width="48dp"
                     android:layout_height="wrap_content"
                     android:gravity="center"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp"
                     android:background="@drawable/background_options_legs_sets"
                     app:layout_constraintTop_toTopOf="@id/legs_slider"
                     app:layout_constraintBottom_toBottomOf="@id/legs_slider"

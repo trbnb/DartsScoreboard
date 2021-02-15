@@ -1,7 +1,10 @@
 package de.trbnb.darts.ui.match
 
+import android.graphics.Color
 import androidx.annotation.ColorInt
+import androidx.annotation.ColorRes
 import androidx.databinding.Bindable
+import de.trbnb.darts.resources.ResourceValue
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -10,6 +13,7 @@ import de.trbnb.darts.logic.MatchLogic
 import de.trbnb.darts.models.Player
 import de.trbnb.darts.models.average
 import de.trbnb.darts.resources.ResourceProvider
+import de.trbnb.darts.resources.resolveAttributeAs
 import de.trbnb.darts.ui.useLightOnPrimaryColor
 import de.trbnb.mvvmbase.BaseViewModel
 import de.trbnb.mvvmbase.coroutines.CoroutineViewModel
@@ -21,7 +25,7 @@ import kotlinx.coroutines.flow.map
 class PlayerParticipationViewModel @AssistedInject constructor(
     @Assisted private val logic: MatchLogic,
     @Assisted val player: Player,
-    resourceProvider: ResourceProvider
+    private val resourceProvider: ResourceProvider
 ) : BaseViewModel(), CoroutineViewModel {
     @get:Bindable
     val points by logic.currentPlayer
@@ -47,17 +51,26 @@ class PlayerParticipationViewModel @AssistedInject constructor(
     val wonLegs: String
         get() = logic.currentParticipation(player).first.wonLegs.toString()
 
+    @get:Bindable("currentPlayer")
     @get:ColorInt
-    val foregroundColor: Int = when (player.color.useLightOnPrimaryColor()) {
-        true -> R.color.white
-        false -> R.color.black
-    }.let(resourceProvider::getColor)
+    val backgroundColor: Int
+        get() = when (isCurrentPlayer) {
+            true -> player.color
+            false -> Color.TRANSPARENT
+        }
+
+    @get:Bindable("backgroundColor")
+    @get:ColorRes
+    val foregroundColorRes: Int
+        get() = when (isCurrentPlayer) {
+            false -> resourceProvider.resolveAttributeAs<ResourceValue.Text>(android.R.attr.textColorPrimary).resourceId
+            true -> when (player.color.useLightOnPrimaryColor()) {
+                true -> R.color.white
+                false -> R.color.black
+            }
+        }
 
     val showSets = logic.match.matchOptions.sets > 1
-
-    override fun onDestroy() {
-        super.onDestroy()
-    }
 
     @AssistedFactory
     interface Factory {

@@ -72,6 +72,11 @@ class MatchViewModel @Inject constructor(
     @get:Bindable
     val turnState by matchLogic.turnState.toBindable()
 
+    @get:Bindable
+    val currentPlayerIndex by matchLogic.currentPlayer.combine(matchLogic.playerOrder) { player, order -> player to order }
+        .map { (player, order) -> order.indexOf(player) }
+        .toBindable(defaultValue = 0)
+
     val fieldViewModels = listOf(
         Triple(Field.MISS to Multiplier.SINGLE, Field.BULL to Multiplier.SINGLE, Field.BULL to Multiplier.DOUBLE),
         *(1..20).map { number ->

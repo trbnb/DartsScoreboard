@@ -151,3 +151,8 @@ fun FloatingActionButton.setShow(show: Boolean) {
         .setDuration(500)
         .start()
 }
+
+@BindingAdapter("tintRes")
+fun ImageView.setTintRes(@ColorRes res: Int) {
+    imageTintList = context.getColorStateList(res)
+}
