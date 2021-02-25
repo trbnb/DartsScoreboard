@@ -9,7 +9,7 @@ import de.trbnb.darts.R
 import de.trbnb.darts.databinding.ActivityMainBinding
 import de.trbnb.darts.di.HiltMvvmBindingActivity
 import de.trbnb.darts.ui.main.newplayer.NewPlayerDialogFragment
-import de.trbnb.darts.ui.matchsetup.MatchSetupActivity
+import de.trbnb.darts.ui.matchsetup.MatchSetupDialogFragment
 import de.trbnb.mvvmbase.events.Event
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
@@ -20,6 +20,7 @@ class MainActivity : HiltMvvmBindingActivity<MainViewModel, ActivityMainBinding>
         super.onCreate(savedInstanceState)
 
         binding.playerList.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
+        supportActionBar?.subtitle = "Spielerauswahl"
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -38,7 +39,8 @@ class MainActivity : HiltMvvmBindingActivity<MainViewModel, ActivityMainBinding>
         super.onEvent(event)
 
         when (event) {
-            is MainEvent.ConfigureMatch -> startActivity(MatchSetupActivity.newIntent(this, event.playerIds))
+            is MainEvent.ConfigureMatch -> MatchSetupDialogFragment(event.playerIds)
+                .show(supportFragmentManager, null)
         }
     }
 }

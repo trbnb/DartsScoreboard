@@ -9,6 +9,7 @@ import de.trbnb.darts.R
 import de.trbnb.darts.logic.MatchFactory
 import de.trbnb.darts.logic.TurnState
 import de.trbnb.darts.models.Field
+import de.trbnb.darts.models.InOutRule
 import de.trbnb.darts.models.Multiplier
 import de.trbnb.darts.models.ThrowNumber
 import de.trbnb.darts.models.plus
@@ -39,6 +40,15 @@ class MatchViewModel @Inject constructor(
     private val playerParticipationViewModelFactory: PlayerParticipationViewModel.Factory
 ) : BaseViewModel(), CoroutineViewModel {
     private val matchLogic = matchFactory.currentMatch ?: throw IllegalStateException()
+
+    val subtitle = matchLogic.match.matchOptions.run {
+        "$points · " + when (outRule) {
+            InOutRule.STRAIGHT -> "straight out"
+            InOutRule.DOUBLE -> "double out"
+            InOutRule.TRIPLE -> "triple out"
+            InOutRule.MASTER -> "master out"
+        }
+    }
 
     val showSets = matchLogic.match.matchOptions.sets > 1
 

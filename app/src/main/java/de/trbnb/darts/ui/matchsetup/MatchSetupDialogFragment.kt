@@ -8,23 +8,26 @@ import de.trbnb.darts.R
 import de.trbnb.darts.databinding.ActivityMatchSetupBinding
 import de.trbnb.darts.di.HiltMvvmActivity
 import de.trbnb.darts.di.HiltMvvmBindingActivity
+import de.trbnb.darts.di.HiltMvvmBindingBottomSheetFragment
 import de.trbnb.darts.ui.events.StartMatchEvent
 import de.trbnb.darts.ui.match.MatchActivity
 import de.trbnb.mvvmbase.events.Event
 import java.util.UUID
 
 @AndroidEntryPoint
-class MatchSetupActivity : HiltMvvmBindingActivity<MatchSetupViewModel, ActivityMatchSetupBinding>(R.layout.activity_match_setup) {
+class MatchSetupDialogFragment : HiltMvvmBindingBottomSheetFragment<MatchSetupViewModel, ActivityMatchSetupBinding>(R.layout.activity_match_setup) {
     companion object {
         private const val PLAYER_IDS_KEY = "player_ids"
 
-        fun newIntent(context: Context, playerIds: List<UUID>): Intent = Intent(context, MatchSetupActivity::class.java).apply {
-            putExtra(PLAYER_IDS_KEY, playerIds.map(UUID::toString).toTypedArray())
+        operator fun invoke(playerIds: List<UUID>) = MatchSetupDialogFragment().apply {
+            arguments = Bundle().apply {
+                putStringArray(PLAYER_IDS_KEY, playerIds.map(UUID::toString).toTypedArray())
+            }
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onBindingCreated(binding: ActivityMatchSetupBinding) {
+        super.onBindingCreated(binding)
 
         binding.legsSlider.setLabelFormatter {
             if (it == 0f) "∞" else it.toString()
@@ -36,14 +39,14 @@ class MatchSetupActivity : HiltMvvmBindingActivity<MatchSetupViewModel, Activity
 
         when (event) {
             is StartMatchEvent -> {
-                finish()
-                startActivity(Intent(this, MatchActivity::class.java))
+                dismiss()
+                startActivity(Intent(context, MatchActivity::class.java))
             }
         }
     }
 
     override fun onViewModelLoaded(viewModel: MatchSetupViewModel) {
         super.onViewModelLoaded(viewModel)
-        viewModel.playerIds = intent.getStringArrayExtra(PLAYER_IDS_KEY)?.map { UUID.fromString(it) } ?: emptyList()
+        viewModel.playerIds = arguments?.getStringArray(PLAYER_IDS_KEY)?.map { UUID.fromString(it) } ?: emptyList()
     }
 }

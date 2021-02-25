@@ -5,6 +5,9 @@ import de.trbnb.darts.models.*
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
+import java.util.ArrayDeque
+import java.util.Deque
+import java.util.Stack
 
 class MatchLogicImpl(override val match: Match) : MatchLogic {
     private var currentPlayerIndex = 0
@@ -29,6 +32,8 @@ class MatchLogicImpl(override val match: Match) : MatchLogic {
 
     override val gameEnded = CompletableDeferred<Unit>()
 
+    private val previousTurns: Deque<Turn> = ArrayDeque()
+
     private fun nextPlayer() {
         currentPlayerIndex++
 
@@ -36,7 +41,7 @@ class MatchLogicImpl(override val match: Match) : MatchLogic {
     }
 
     private fun newTurn() {
-        turn.value = Turn()
+        turn.value = previousTurns.poll() ?: Turn()
     }
 
     override fun currentParticipation(player: Player): Pair<SetParticipation, LegParticipation> {
@@ -242,6 +247,12 @@ class MatchLogicImpl(override val match: Match) : MatchLogic {
         val (_, leg) = currentParticipation(playerOrder.value[previousPlayerIndex])
 
         val lastTurn = leg.removeLast() ?: return
+
+        val currentTurn = turn.value
+
+        if (currentTurn.first != null && currentTurn.second != null && currentTurn.third != null) {
+            previousTurns.push(currentTurn)
+        }
 
         currentPlayerIndex = previousPlayerIndex
         turn.value = lastTurn

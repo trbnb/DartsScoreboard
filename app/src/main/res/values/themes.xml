@@ -11,7 +11,18 @@
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor" tools:targetApi="l">@color/statusbarColor</item>
+        <item name="android:navigationBarColor">?android:windowBackground</item>
         <!-- Customize your theme here. -->
+    </style>
+
+    <style name="Theme.Darts.Alert" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="colorPrimary">@color/board_green</item>
+        <item name="colorPrimaryVariant">@color/board_green</item>
+        <item name="colorOnPrimary">@color/board_green</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/board_red</item>
+        <item name="colorSecondaryVariant">@color/board_red</item>
+        <item name="colorOnSecondary">@color/black</item>
     </style>
 
     <style name="SliderLabel" parent="Widget.MaterialComponents.Tooltip">

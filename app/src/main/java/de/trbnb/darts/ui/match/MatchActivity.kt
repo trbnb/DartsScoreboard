@@ -1,5 +1,6 @@
 package de.trbnb.darts.ui.match
 
+import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -17,6 +18,12 @@ import de.trbnb.mvvmbase.events.Event
 @AndroidEntryPoint
 class MatchActivity : HiltMvvmBindingActivity<MatchViewModel, ActivityMatchBinding>(R.layout.activity_match) {
     private var undoMenuItem: MenuItem? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        supportActionBar?.subtitle = viewModel.subtitle
+    }
 
     override fun onPostResume() {
         super.onPostResume()
@@ -37,9 +44,10 @@ class MatchActivity : HiltMvvmBindingActivity<MatchViewModel, ActivityMatchBindi
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.undoTurn -> viewModel.undoTurn()
+            else -> super.onOptionsItemSelected(item)
         }
 
-        return super.onOptionsItemSelected(item)
+        return true
     }
 
     override fun onViewModelPropertyChanged(viewModel: MatchViewModel, fieldId: Int) {
@@ -60,7 +68,7 @@ class MatchActivity : HiltMvvmBindingActivity<MatchViewModel, ActivityMatchBindi
     }
 
     override fun onBackPressed() {
-        AlertDialog.Builder(this)
+        AlertDialog.Builder(this, R.style.Theme_Darts_Alert)
             .setTitle("Beenden?")
             .setPositiveButton(android.R.string.ok) { d, _ -> d.dismiss(); finish() }
             .setNegativeButton(android.R.string.cancel) { d, _ -> d.dismiss() }
