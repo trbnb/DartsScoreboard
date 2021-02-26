@@ -23,10 +23,10 @@ class MainViewModel @Inject constructor(
     @get:Bindable
     val players by playerRepository.getAll()
         .map { players -> players.map { playerViewModelFactory(it, playerSelectedListener) } }
-        .toBindable()
+        .toBindable(defaultValue = emptyList())
 
     val startMatchCommand = ruleCommand(
-        enabledRule = { players?.any(PlayerViewModel::isSelected) ?: false },
+        enabledRule = { players.any(PlayerViewModel::isSelected) },
         action = { configureMatch() }
     )
 

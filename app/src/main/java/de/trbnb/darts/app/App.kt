@@ -10,5 +10,6 @@ class App : Application() {
         super.onCreate()
 
         MvvmBase.autoInit()
+            .disableViewModelLifecycleThreadConstraints()
     }
 }
