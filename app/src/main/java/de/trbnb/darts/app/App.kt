@@ -9,7 +9,6 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        MvvmBase.autoInit()
-            .disableViewModelLifecycleThreadConstraints()
+        MvvmBase.disableViewModelLifecycleThreadConstraints()
     }
 }

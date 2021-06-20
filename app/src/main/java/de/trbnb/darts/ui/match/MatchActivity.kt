@@ -1,22 +1,9 @@
 package de.trbnb.darts.ui.match
 
-import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
-import androidx.appcompat.app.AlertDialog
-import androidx.recyclerview.widget.RecyclerView
-import dagger.hilt.android.AndroidEntryPoint
-import de.trbnb.darts.BR
-import de.trbnb.darts.R
-import de.trbnb.darts.databinding.ActivityMatchBinding
-import de.trbnb.darts.di.HiltMvvmBindingActivity
-import de.trbnb.darts.ui.events.CloseEvent
-import de.trbnb.mvvmbase.events.Event
-
+/*
 @Suppress("EXPERIMENTAL_API_USAGE")
 @AndroidEntryPoint
-class MatchActivity : HiltMvvmBindingActivity<MatchViewModel, ActivityMatchBinding>(R.layout.activity_match) {
+class MatchActivity : MvvmBindingActivity<MatchViewModel, ActivityMatchBinding>(R.layout.activity_match) {
     private var undoMenuItem: MenuItem? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -79,3 +66,4 @@ class MatchActivity : HiltMvvmBindingActivity<MatchViewModel, ActivityMatchBindi
         return computeHorizontalScrollRange() > width || computeVerticalScrollRange() > height
     }
 }
+*/

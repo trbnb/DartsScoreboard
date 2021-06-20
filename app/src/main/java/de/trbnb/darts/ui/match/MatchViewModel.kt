@@ -1,9 +1,6 @@
 package de.trbnb.darts.ui.match
 
 import androidx.annotation.ColorRes
-import androidx.databinding.Bindable
-import androidx.databinding.BindingAdapter
-import androidx.recyclerview.widget.RecyclerView
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.trbnb.darts.R
 import de.trbnb.darts.logic.MatchFactory
@@ -17,6 +14,7 @@ import de.trbnb.darts.models.value
 import de.trbnb.darts.ui.events.CloseEvent
 import de.trbnb.darts.vibration.Vibrator
 import de.trbnb.mvvmbase.BaseViewModel
+import de.trbnb.mvvmbase.Bindable
 import de.trbnb.mvvmbase.bindableproperty.beforeSet
 import de.trbnb.mvvmbase.bindableproperty.bindableBoolean
 import de.trbnb.mvvmbase.commands.ruleCommand
@@ -65,7 +63,6 @@ class MatchViewModel @Inject constructor(
         .bindEvents()
         .autoDestroy()
 
-    @get:Bindable
     val info by matchLogic.remainingPoints
         .combine(matchLogic.turnState) { remainingPoints, state -> remainingPoints to state }
         .map { (remainingPoints, state) ->
@@ -77,16 +74,12 @@ class MatchViewModel @Inject constructor(
         }
         .toBindable()
 
-    @get:Bindable
     val remainingPoints by matchLogic.remainingPoints.map(Int::toString).toBindable()
 
-    @get:Bindable
     val currentTotal by matchLogic.turn.map { it.value.toString() }.toBindable()
 
-    @get:Bindable
     val turnState by matchLogic.turnState.toBindable()
 
-    @get:Bindable
     val currentPlayerIndex by matchLogic.currentPlayer.combine(matchLogic.playerOrder) { player, order -> player to order }
         .map { (player, order) -> order.indexOf(player) }
         .toBindable(defaultValue = 0)
@@ -104,7 +97,6 @@ class MatchViewModel @Inject constructor(
         .bindEvents()
         .autoDestroy()
 
-    @get:Bindable
     val finishSuggestions by matchLogic.suggestedFinishes
         .map { it.map(::PossibleFinishViewModel) }
         .toBindable()
@@ -116,10 +108,9 @@ class MatchViewModel @Inject constructor(
     val confirmTurnCommand = ruleCommand(
         enabledRule = { turnState !is TurnState.Open },
         action = { matchLogic.confirmTurn() },
-        dependentFields = listOf(::turnState)
+        dependencyProperties = listOf(::turnState)
     )
 
-    @get:Bindable
     var isPlayerListScrollable by bindableBoolean(defaultValue = false)
 
     @get:ColorRes
@@ -130,7 +121,6 @@ class MatchViewModel @Inject constructor(
             false -> R.color.transparent
         }
 
-    @get:Bindable
     val canUndoTurn by matchLogic.turn.map { matchLogic.canUndoTurnConfirmation() }.toBindable(defaultValue = false)
 
     init {

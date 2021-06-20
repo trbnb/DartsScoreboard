@@ -1,7 +1,5 @@
 package de.trbnb.darts.ui.matchsetup
 
-import androidx.databinding.Bindable
-import androidx.hilt.Assisted
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,6 +10,7 @@ import de.trbnb.darts.models.PlayerOrder
 import de.trbnb.darts.models.PlayerStartOrder
 import de.trbnb.darts.players.PlayerRepository
 import de.trbnb.darts.ui.events.StartMatchEvent
+import de.trbnb.mvvmbase.Bindable
 import de.trbnb.mvvmbase.bindableproperty.bindable
 import de.trbnb.mvvmbase.bindableproperty.bindableInt
 import de.trbnb.mvvmbase.bindableproperty.distinct
@@ -23,7 +22,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MatchSetupViewModel @Inject constructor(
-    @Assisted savedStateHandle: SavedStateHandle,
+    savedStateHandle: SavedStateHandle,
     private val matchFactory: MatchFactory,
     private val playerRepository: PlayerRepository
 ) : BaseStateSavingViewModel(savedStateHandle) {
@@ -33,23 +32,18 @@ class MatchSetupViewModel @Inject constructor(
         createMatch()
     }
 
-    @get:Bindable
     var points by bindableInt(301).distinct()
 
-    @get:Bindable
     var legs by bindableInt(0).distinct()
 
     @get:Bindable("legs")
     val legsText: String
         get() = if (legs == 0) "∞" else legs.toString()
 
-    @get:Bindable
     var sets by bindableInt(1).distinct()
 
-    @get:Bindable
     var outRule by bindable(InOutRule.STRAIGHT).distinct()
 
-    @get:Bindable
     var inRule by bindable(InOutRule.STRAIGHT).distinct()
 
     private fun createMatch() = viewModelScope.launch {

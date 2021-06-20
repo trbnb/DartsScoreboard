@@ -1,6 +1,5 @@
 package de.trbnb.darts.ui.match
 
-import androidx.databinding.Bindable
 import de.trbnb.darts.logic.MatchLogic
 import de.trbnb.darts.logic.TurnState
 import de.trbnb.darts.models.ThrowNumber
@@ -8,6 +7,7 @@ import de.trbnb.darts.models.ThrowState
 import de.trbnb.darts.models.description
 import de.trbnb.darts.models.get
 import de.trbnb.mvvmbase.BaseViewModel
+import de.trbnb.mvvmbase.Bindable
 import de.trbnb.mvvmbase.commands.ruleCommand
 import de.trbnb.mvvmbase.coroutines.CoroutineViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -24,7 +24,6 @@ class ThrowViewModel(
         ThrowNumber.THREE -> "3"
     }
 
-    @get:Bindable
     val thisThrow by logic.turn.map { it[throwNumber] }.toBindable()
 
     @get:Bindable("thisThrow")
@@ -43,7 +42,6 @@ class ThrowViewModel(
     val description: String
         get() = thisThrow?.description ?: ""
 
-    @get:Bindable
     val isNextThrow by logic.turnState
         .map { it is TurnState.Open && it.nextThrow == throwNumber }
         .toBindable(defaultValue = false)
@@ -51,6 +49,6 @@ class ThrowViewModel(
     val removeCommand = ruleCommand(
         enabledRule = { thisThrow != null },
         action = { logic.removeThrow(throwNumber) },
-        dependentFields = listOf(::thisThrow)
+        dependencyProperties = listOf(::thisThrow)
     )
 }

@@ -2,7 +2,6 @@ package de.trbnb.darts.ui.match
 
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
-import androidx.databinding.Bindable
 import de.trbnb.darts.R
 import de.trbnb.darts.logic.MatchLogic
 import de.trbnb.darts.logic.TurnState
@@ -23,7 +22,6 @@ class FieldViewModel(
     val text = buildDescription(field, multiplier)
 
     @ExperimentalCoroutinesApi
-    @get:Bindable
     val isEnabled by logic.turnState.map { it is TurnState.Open }.toBindable(defaultValue = false)
 
     @get:ColorRes

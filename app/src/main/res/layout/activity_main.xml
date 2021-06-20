@@ -17,7 +17,6 @@
             android:id="@+id/playerList"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:players="@{vm.players}"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             tools:listitem="@layout/item_player"
             tools:itemCount="30"

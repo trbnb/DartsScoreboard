@@ -3,8 +3,6 @@ package de.trbnb.darts.ui.match
 import android.graphics.Color
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
-import androidx.databinding.Bindable
-import de.trbnb.darts.resources.ResourceValue
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -13,9 +11,11 @@ import de.trbnb.darts.logic.MatchLogic
 import de.trbnb.darts.models.Player
 import de.trbnb.darts.models.average
 import de.trbnb.darts.resources.ResourceProvider
+import de.trbnb.darts.resources.ResourceValue
 import de.trbnb.darts.resources.resolveAttributeAs
 import de.trbnb.darts.ui.useLightOnPrimaryColor
 import de.trbnb.mvvmbase.BaseViewModel
+import de.trbnb.mvvmbase.Bindable
 import de.trbnb.mvvmbase.coroutines.CoroutineViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.combine
@@ -27,13 +27,11 @@ class PlayerParticipationViewModel @AssistedInject constructor(
     @Assisted val player: Player,
     private val resourceProvider: ResourceProvider
 ) : BaseViewModel(), CoroutineViewModel {
-    @get:Bindable
     val points by logic.currentPlayer
         .combine(logic.turn) { player, turn -> player to turn }
         .map { logic.remainingPoints(player).toString() }
         .toBindable()
 
-    @get:Bindable
     val isCurrentPlayer by logic.currentPlayer
         .combine(logic.turn) { player, turn -> player to turn}
         .map { (currentPlayer, _) -> currentPlayer == player }
