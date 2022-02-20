@@ -26,3 +26,5 @@ enum class Field(val value: Int, vararg val multipliers: Multiplier = Multiplier
 }
 
 operator fun Field.plus(multiplier: Multiplier) = Throw(this, multiplier)
+
+fun Int.toField() = Field.values().first { it.value == this }
