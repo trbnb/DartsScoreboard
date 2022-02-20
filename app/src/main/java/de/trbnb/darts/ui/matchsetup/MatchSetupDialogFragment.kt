@@ -32,16 +32,17 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltNavGraphViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModelStoreOwner
 import de.trbnb.darts.R
 import de.trbnb.darts.models.InOutRule
 import de.trbnb.darts.utils.infinity
-import de.trbnb.mvvmbase.utils.observeAsMutableState
+import de.trbnb.mvvmbase.compose.observeAsMutableState
 import java.util.Locale
 
 @Composable
-fun MatchSetupDialog() {
-    val viewModel = hiltNavGraphViewModel<MatchSetupViewModel>()
+fun MatchSetupDialog(viewModelStoreOwner: ViewModelStoreOwner) {
+    val viewModel = hiltViewModel<MatchSetupViewModel>(viewModelStoreOwner)
     MatchSetupDialogTemplate(
         pointsState = viewModel::points.observeAsMutableState(),
         setsState = viewModel::sets.observeAsMutableState(),

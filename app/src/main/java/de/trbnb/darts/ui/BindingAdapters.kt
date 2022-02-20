@@ -11,7 +11,6 @@ import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.core.content.ContextCompat
 import androidx.core.view.isInvisible
-import androidx.core.view.isVisible
 import androidx.databinding.BindingAdapter
 import androidx.databinding.InverseBindingAdapter
 import androidx.databinding.InverseBindingListener
@@ -91,9 +90,10 @@ var Slider.dataBindingValue: Int
 
 @BindingAdapter("valueAttrChanged")
 fun Slider.dataBindingValueListener(inverseBindingListener: InverseBindingListener?) {
-    addOnChangeListener(inverseBindingListener?.let {
-        Slider.OnChangeListener { _, _, _ -> inverseBindingListener.onChange() }
-    })
+    when (inverseBindingListener) {
+        null -> clearOnChangeListeners()
+        else -> addOnChangeListener(Slider.OnChangeListener { _, _, _ -> inverseBindingListener.onChange() })
+    }
 }
 
 @set:BindingAdapter("inRule")

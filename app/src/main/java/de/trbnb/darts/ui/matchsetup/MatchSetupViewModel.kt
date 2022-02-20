@@ -10,11 +10,9 @@ import de.trbnb.darts.models.PlayerOrder
 import de.trbnb.darts.models.PlayerStartOrder
 import de.trbnb.darts.players.PlayerRepository
 import de.trbnb.darts.ui.events.StartMatchEvent
-import de.trbnb.mvvmbase.Bindable
-import de.trbnb.mvvmbase.bindableproperty.bindable
-import de.trbnb.mvvmbase.bindableproperty.bindableInt
-import de.trbnb.mvvmbase.bindableproperty.distinct
+import de.trbnb.mvvmbase.DependsOn
 import de.trbnb.mvvmbase.commands.simpleCommand
+import de.trbnb.mvvmbase.observableproperty.observable
 import de.trbnb.mvvmbase.savedstate.BaseStateSavingViewModel
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -26,25 +24,25 @@ class MatchSetupViewModel @Inject constructor(
     private val matchFactory: MatchFactory,
     private val playerRepository: PlayerRepository
 ) : BaseStateSavingViewModel(savedStateHandle) {
-    var playerIds by bindable<List<UUID>>(listOf())
+    var playerIds by observable<List<UUID>>(listOf<UUID>())
 
     val startMatchCommand = simpleCommand {
         createMatch()
     }
 
-    var points by bindableInt(301).distinct()
+    var points by observable(301).distinct()
 
-    var legs by bindableInt(0).distinct()
+    var legs by observable(0).distinct()
 
-    @get:Bindable("legs")
+    @DependsOn("legs")
     val legsText: String
         get() = if (legs == 0) "∞" else legs.toString()
 
-    var sets by bindableInt(1).distinct()
+    var sets by observable(1).distinct()
 
-    var outRule by bindable(InOutRule.STRAIGHT).distinct()
+    var outRule by observable(InOutRule.STRAIGHT).distinct()
 
-    var inRule by bindable(InOutRule.STRAIGHT).distinct()
+    var inRule by observable(InOutRule.STRAIGHT).distinct()
 
     private fun createMatch() = viewModelScope.launch {
         val selectedPlayers = playerRepository.getByIds(playerIds)

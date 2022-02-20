@@ -3,6 +3,7 @@ package de.trbnb.darts.ui.match
 import android.graphics.Color
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
+import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -15,52 +16,53 @@ import de.trbnb.darts.resources.ResourceValue
 import de.trbnb.darts.resources.resolveAttributeAs
 import de.trbnb.darts.ui.useLightOnPrimaryColor
 import de.trbnb.mvvmbase.BaseViewModel
-import de.trbnb.mvvmbase.Bindable
-import de.trbnb.mvvmbase.coroutines.CoroutineViewModel
+import de.trbnb.mvvmbase.DependsOn
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
 @ExperimentalCoroutinesApi
 class PlayerParticipationViewModel @AssistedInject constructor(
     @Assisted private val logic: MatchLogic,
     @Assisted val player: Player,
     private val resourceProvider: ResourceProvider
-) : BaseViewModel(), CoroutineViewModel {
-    val points by logic.currentPlayer
+) : BaseViewModel() {
+    val points = logic.currentPlayer
         .combine(logic.turn) { player, turn -> player to turn }
         .map { logic.remainingPoints(player).toString() }
-        .toBindable()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    val isCurrentPlayer by logic.currentPlayer
+    val isCurrentPlayer = logic.currentPlayer
         .combine(logic.turn) { player, turn -> player to turn}
         .map { (currentPlayer, _) -> currentPlayer == player }
-        .toBindable(defaultValue = false)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
-    @get:Bindable("currentPlayer")
+    @DependsOn("currentPlayer")
     val average: String
         get() = String.format("%.2f", logic.match[player].average)
 
-    @get:Bindable("currentPlayer")
+    @DependsOn("currentPlayer")
     val wonSets: String
         get() = logic.match[player].wonSets.toString()
 
-    @get:Bindable("currentPlayer")
+    @DependsOn("currentPlayer")
     val wonLegs: String
         get() = logic.currentParticipation(player).first.wonLegs.toString()
 
-    @get:Bindable("currentPlayer")
+    @DependsOn("currentPlayer")
     @get:ColorInt
     val backgroundColor: Int
-        get() = when (isCurrentPlayer) {
+        get() = when (isCurrentPlayer.value) {
             true -> player.color
             false -> Color.TRANSPARENT
         }
 
-    @get:Bindable("backgroundColor")
+    @DependsOn("backgroundColor")
     @get:ColorRes
     val foregroundColorRes: Int
-        get() = when (isCurrentPlayer) {
+        get() = when (isCurrentPlayer.value) {
             false -> resourceProvider.resolveAttributeAs<ResourceValue.Text>(android.R.attr.textColorPrimary).resourceId
             true -> when (player.color.useLightOnPrimaryColor()) {
                 true -> R.color.white

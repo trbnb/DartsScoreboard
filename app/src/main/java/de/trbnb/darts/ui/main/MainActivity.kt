@@ -38,7 +38,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint
 import de.trbnb.darts.R
 import de.trbnb.darts.models.Player
-import de.trbnb.mvvmbase.utils.observeAsState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.util.UUID
 
@@ -113,8 +112,8 @@ fun ScaffoldTest(players: List<PlayerItem>, onFabClicked: () -> Unit) {
 @Composable
 fun MainScreen() {
     val viewModel = viewModel<MainViewModel>()
-    val playerState by viewModel::players.observeAsState()
-    PlayerList(players = playerState.orEmpty())
+    val playerState by viewModel.players.collectAsState()
+    PlayerList(players = playerState)
 }
 
 @Composable

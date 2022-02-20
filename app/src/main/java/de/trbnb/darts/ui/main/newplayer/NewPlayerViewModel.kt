@@ -8,7 +8,6 @@ import de.trbnb.darts.ui.events.CloseEvent
 import de.trbnb.mvvmbase.BaseViewModel
 import de.trbnb.mvvmbase.bindableproperty.bindable
 import de.trbnb.mvvmbase.bindableproperty.bindableULong
-import de.trbnb.mvvmbase.bindableproperty.distinct
 import de.trbnb.mvvmbase.commands.ruleCommand
 import de.trbnb.mvvmbase.commands.simpleCommand
 import kotlinx.coroutines.launch

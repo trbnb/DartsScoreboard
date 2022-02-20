@@ -8,8 +8,8 @@ import de.trbnb.darts.logic.TurnState
 import de.trbnb.darts.models.Field
 import de.trbnb.darts.models.Multiplier
 import de.trbnb.darts.models.buildDescription
+import de.trbnb.darts.utils.CoroutinesViewModel
 import de.trbnb.mvvmbase.BaseViewModel
-import de.trbnb.mvvmbase.coroutines.CoroutineViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.map
 
@@ -18,11 +18,11 @@ class FieldViewModel(
     val multiplier: Multiplier,
     val onSelected: (Field, Multiplier) -> Unit,
     logic: MatchLogic
-) : BaseViewModel(), CoroutineViewModel {
+) : BaseViewModel(), CoroutinesViewModel {
     val text = buildDescription(field, multiplier)
 
     @ExperimentalCoroutinesApi
-    val isEnabled by logic.turnState.map { it is TurnState.Open }.toBindable(defaultValue = false)
+    val isEnabled by logic.turnState.map { it is TurnState.Open }.observe(defaultValue = false)
 
     @get:ColorRes
     val backgroundColorRes: Int = when {
