@@ -42,7 +42,6 @@
                     app:layout_constraintTop_toTopOf="@id/points_slider"
                     app:layout_constraintBottom_toBottomOf="@id/points_slider"
                     android:gravity="center_vertical|end"
-                    android:text="@{String.valueOf(vm.points)}"
                     android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
                     tools:text="301"/>
 
@@ -55,7 +54,6 @@
                     android:stepSize="100"
                     android:valueTo="1001"
                     tools:value="301"
-                    app:value="@={vm.points}"
                     app:labelBehavior="floating"
                     app:labelStyle="@style/SliderLabel"
                     app:layout_constraintStart_toEndOf="@id/points"
@@ -86,7 +84,7 @@
                     app:layout_constraintBottom_toBottomOf="@id/sets_slider"
                     app:layout_constraintStart_toEndOf="@id/sets_label"
                     android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                    android:text="@{String.valueOf(vm.sets)}"
+
                     tools:text="4"/>
 
                 <com.google.android.material.slider.Slider
@@ -98,7 +96,6 @@
                     android:stepSize="1"
                     android:valueTo="10"
                     tools:value="1"
-                    app:value="@={vm.sets}"
                     app:labelBehavior="floating"
                     app:labelStyle="@style/SliderLabel"
                     app:layout_constraintStart_toEndOf="@id/sets"
@@ -129,7 +126,7 @@
                     app:layout_constraintBottom_toBottomOf="@id/legs_slider"
                     app:layout_constraintStart_toEndOf="@id/legs_label"
                     android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                    android:text="@{vm.legsText}"
+
                     tools:text="4"/>
 
                 <com.google.android.material.slider.Slider
@@ -141,7 +138,7 @@
                     android:stepSize="1"
                     android:valueTo="20"
                     tools:value="8"
-                    app:value="@={vm.legs}"
+
                     app:labelBehavior="floating"
                     app:labelStyle="@style/SliderLabel"
                     app:layout_constraintStart_toEndOf="@id/legs"
@@ -163,8 +160,7 @@
                     app:layout_constraintTop_toBottomOf="@id/out_rule_label"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:singleSelection="true"
-                    app:outRule="@={vm.outRule}">
+                    app:singleSelection="true">
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/out_straight"
@@ -212,8 +208,7 @@
                     app:singleSelection="true"
                     app:layout_constraintTop_toBottomOf="@id/in_rule_label"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:inRule="@={vm.inRule}">
+                    app:layout_constraintEnd_toEndOf="parent">
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/in_straight"
@@ -260,7 +255,6 @@
             app:icon="@drawable/ic_darts_board_24dp"
             app:iconTint="@color/white"
             android:text="GAME ON!"
-            app:clickCommand="@{vm.startMatchCommand}"
             android:textColor="@color/white"
             tools:ignore="ContentDescription" />
 

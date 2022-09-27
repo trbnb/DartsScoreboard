@@ -1,38 +1,46 @@
 package de.trbnb.darts.ui.main.newplayer
 
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.trbnb.darts.players.PlayerRepository
-import de.trbnb.darts.resources.ResourceProvider
 import de.trbnb.darts.ui.events.CloseEvent
 import de.trbnb.mvvmbase.BaseViewModel
 import de.trbnb.mvvmbase.bindableproperty.bindable
 import de.trbnb.mvvmbase.bindableproperty.bindableULong
 import de.trbnb.mvvmbase.commands.ruleCommand
 import de.trbnb.mvvmbase.commands.simpleCommand
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class NewPlayerViewModel @Inject constructor(
-    playerRepository: PlayerRepository,
-    resourceProvider: ResourceProvider
+    private val playerRepository: PlayerRepository
 ) : BaseViewModel() {
-    var name by bindable("").distinct()
+    private val _uiState = MutableStateFlow(UiState("", Color.Black.value))
+    val uiState = _uiState.asStateFlow()
 
-    var color by bindableULong(defaultValue = 0UL).distinct()
+    fun create() {
+        if (!uiState.value.canCreate) return
 
-    val cancelCommand = simpleCommand { eventChannel(CloseEvent) }
+        val (name, color) = uiState.value
+        viewModelScope.launch {
+            playerRepository.create(name, color.toInt())
+            eventChannel(CloseEvent)
+        }
+    }
 
-    val createCommand = ruleCommand(
-        enabledRule = { name.isNotBlank() },
-        action = {
-            viewModelScope.launch {
-                playerRepository.create(name, color.toInt())
-                eventChannel(CloseEvent)
-            }
-        },
-        dependencyProperties = listOf(::name)
-    )
+    fun set(
+        name: String = _uiState.value.name,
+        color: ULong = _uiState.value.color
+    ) {
+        _uiState.value = _uiState.value.copy(name = name, color = color)
+    }
+
+    data class UiState(val name: String, val color: ULong) {
+        val canCreate: Boolean get() = name.isNotBlank()
+    }
 }
 

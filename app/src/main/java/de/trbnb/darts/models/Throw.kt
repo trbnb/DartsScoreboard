@@ -6,10 +6,12 @@ val Throw?.value: Int
     get() = when (this) {
         null -> 0
         else -> when(state) {
-            ThrowState.OK -> field.value * multiplier.value
+            ThrowState.OK -> rawValue
             else -> 0
         }
     }
+
+val Throw.rawValue: Int get() = field.value * multiplier.value
 
 val Throw.description: String
     get() = buildDescription(field, multiplier)

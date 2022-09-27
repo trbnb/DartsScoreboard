@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-@ExperimentalCoroutinesApi
 class ThrowViewModel(
     private val throwNumber: ThrowNumber,
     private val logic: MatchLogic
@@ -26,7 +25,7 @@ class ThrowViewModel(
         ThrowNumber.THREE -> "3"
     }
 
-    val thisThrow = logic.turn.map { it[throwNumber] }
+    val thisThrow = logic.state.map { it.currentTurn[throwNumber] }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     @DependsOn("thisThrow")
@@ -45,7 +44,7 @@ class ThrowViewModel(
     val description: String
         get() = thisThrow.value?.description ?: ""
 
-    val isNextThrow = logic.turnState
+    val isNextThrow = logic.state.map { it.turnState }
         .map { it is TurnState.Open && it.nextThrow == throwNumber }
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 

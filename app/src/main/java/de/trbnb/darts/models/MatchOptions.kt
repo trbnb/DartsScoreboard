@@ -1,6 +1,6 @@
 package de.trbnb.darts.models
 
-class MatchOptions(
+data class MatchOptions(
     val points: Int,
     val sets: Int,
     val legs: Int,

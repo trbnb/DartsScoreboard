@@ -5,39 +5,40 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.trbnb.darts.R
 import de.trbnb.darts.logic.MatchFactory
+import de.trbnb.darts.logic.MatchLogic
 import de.trbnb.darts.logic.TurnState
-import de.trbnb.darts.models.Field
-import de.trbnb.darts.models.InOutRule
-import de.trbnb.darts.models.Multiplier
-import de.trbnb.darts.models.ThrowNumber
-import de.trbnb.darts.models.plus
-import de.trbnb.darts.models.value
+import de.trbnb.darts.models.*
 import de.trbnb.darts.ui.events.CloseEvent
 import de.trbnb.darts.utils.CoroutinesViewModel
+import de.trbnb.darts.utils.Triple
+import de.trbnb.darts.utils.map
 import de.trbnb.darts.vibration.Vibrator
 import de.trbnb.mvvmbase.BaseViewModel
 import de.trbnb.mvvmbase.DependsOn
 import de.trbnb.mvvmbase.bindableproperty.bindableBoolean
 import de.trbnb.mvvmbase.commands.ruleCommand
 import de.trbnb.mvvmbase.utils.destroyAll
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@ExperimentalCoroutinesApi
 @HiltViewModel
 class MatchViewModel @Inject constructor(
     matchFactory: MatchFactory,
     private val vibrator: Vibrator,
     private val playerParticipationViewModelFactory: PlayerParticipationViewModel.Factory
 ) : BaseViewModel(), CoroutinesViewModel {
-    private val matchLogic = matchFactory.currentMatch ?: throw IllegalStateException()
+    private val matchLogic = matchFactory.currentMatch.value ?: throw IllegalStateException()
+
+    val logic = matchFactory.currentMatch
+
+    val matchState = matchFactory.currentMatch
+        .flatMapConcat { matchLogic ->
+            matchLogic?.state?.map {
+                System.err.println(matchLogic?.state?.value?.currentPlayer); UiState(it) }
+                ?: MutableStateFlow(null)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     val subtitle = matchLogic.match.matchOptions.run {
         "$points · " + when (outRule) {
@@ -50,8 +51,8 @@ class MatchViewModel @Inject constructor(
 
     val showSets = matchLogic.match.matchOptions.sets > 1
 
-    val playerViewModels by matchLogic.playerOrder
-        .map { players -> players.map { playerParticipationViewModelFactory(matchLogic, it) } }
+    val playerViewModels by matchLogic.state
+        .map { state -> state.playerOrder.map { playerParticipationViewModelFactory(matchLogic, it) } }
         .observe()
         .beforeSet { old, new ->
             old?.destroyAll()
@@ -63,25 +64,24 @@ class MatchViewModel @Inject constructor(
         .bindEvents()
         .autoDestroy()
 
-    val info by matchLogic.remainingPoints
-        .combine(matchLogic.turnState) { remainingPoints, state -> remainingPoints to state }
-        .map { (remainingPoints, state) ->
+    val info by matchLogic.state
+        .map { state ->
             when {
-                state == TurnState.Bust -> "BUST" to R.color.info_text_red
-                remainingPoints == 0 -> "WON" to R.color.info_text_green
+                state.turnState == TurnState.Bust -> "BUST" to R.color.info_text_red
+                state.currentParticipationStats.firstOrNull { it.player == state.currentPlayer }?.remainingPoints == 0 -> "WON" to R.color.info_text_green
                 else -> null
             }
         }
         .observe()
 
-    val remainingPoints by matchLogic.remainingPoints.map(Int::toString).observe()
+    val remainingPoints by matchLogic.state.map { state -> state.currentParticipationStats.firstOrNull { it.player == state.currentPlayer }?.remainingPoints.toString() }.observe()
 
-    val currentTotal by matchLogic.turn.map { it.value.toString() }.observe()
+    val currentTotal by matchLogic.state.map { it.currentTurn.value.toString() }.observe()
 
-    val turnState by matchLogic.turnState.observe()
+    val turnState by matchLogic.state.map { it.turnState }.observe()
 
-    val currentPlayerIndex by matchLogic.currentPlayer.combine(matchLogic.playerOrder) { player, order -> player to order }
-        .map { (player, order) -> order.indexOf(player) }
+    val currentPlayerIndex by matchLogic.state
+        .map { it.playerOrder.indexOf(it.currentPlayer) }
         .observe(defaultValue = 0)
 
     val fieldViewModels = listOf(
@@ -97,8 +97,8 @@ class MatchViewModel @Inject constructor(
         .bindEvents()
         .autoDestroy()
 
-    val finishSuggestions by matchLogic.suggestedFinishes
-        .map { it.map(::PossibleFinishViewModel) }
+    val finishSuggestions by matchLogic.state
+        .map { it.suggestedFinishes?.map(::PossibleFinishViewModel).orEmpty() }
         .observe()
         .beforeSet { old, new ->
             old?.destroyAll()
@@ -111,6 +111,18 @@ class MatchViewModel @Inject constructor(
         dependencyProperties = listOf(::turnState)
     )
 
+    fun confirmTurn() {
+        logic.value?.confirmTurn()
+    }
+
+    fun fallenOffChanged(throwNumber: ThrowNumber, fallenOff: Boolean) {
+        logic.value?.fellOff(throwNumber, fallenOff)
+    }
+
+    fun deleteThrow(throwNumber: ThrowNumber) {
+        logic.value?.removeThrow(throwNumber)
+    }
+
     var isPlayerListScrollable by bindableBoolean(defaultValue = false)
 
     @get:ColorRes
@@ -121,10 +133,12 @@ class MatchViewModel @Inject constructor(
             false -> R.color.transparent
         }
 
-    val canUndoTurn by matchLogic.turn.map { matchLogic.canUndoTurnConfirmation() }.observe(defaultValue = false)
+    val canUndoTurn by matchLogic.state
+        .map { matchLogic.canUndoTurnConfirmation() }
+        .observe(defaultValue = false)
 
     init {
-        matchLogic.turnState.distinctUntilChanged()
+        matchLogic.state.map { it.turnState }.distinctUntilChanged()
             .filterIsInstance<TurnState.Bust>()
             .onEach { vibrator.vibrateShortly() }
             .launchIn(viewModelScope)
@@ -138,8 +152,36 @@ class MatchViewModel @Inject constructor(
 
     fun undoTurn() = matchLogic.undoTurnConfirmation()
 
+    fun onThrow(_throw: Throw) {
+        logic.value?.addThrow(_throw)
+    }
+
     private fun onFieldSelected(field: Field, multiplier: Multiplier) {
         matchLogic.addThrow(field + multiplier)
+    }
+
+    class UiState(
+        matchState: MatchLogic.State,
+    ) : MatchLogic.State by matchState {
+        val throwInfos: Triple<ThrowInfo> = ThrowNumber.tripple.map { number ->
+            ThrowInfo(
+                number,
+                matchState.currentTurn.nextThrow == number,
+                matchState.currentTurn[number]
+            )
+        }
+
+        val isConfirmTurnAvailable = matchState.currentTurn.nextThrow == null
+    }
+
+    class ThrowInfo(
+        val number: ThrowNumber,
+        val isNextThrow: Boolean,
+        private val _throw: Throw?
+    ) {
+        val value: String get() = _throw?.rawValue?.toString() ?: "-"
+        val description: String get() = _throw?.description ?: "-"
+        val isFallenOff: Boolean get() = _throw?.state == ThrowState.FALLEN_OFF
     }
 }
 

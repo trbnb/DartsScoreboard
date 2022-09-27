@@ -17,27 +17,20 @@ import de.trbnb.darts.resources.resolveAttributeAs
 import de.trbnb.darts.ui.useLightOnPrimaryColor
 import de.trbnb.mvvmbase.BaseViewModel
 import de.trbnb.mvvmbase.DependsOn
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-@ExperimentalCoroutinesApi
 class PlayerParticipationViewModel @AssistedInject constructor(
     @Assisted private val logic: MatchLogic,
     @Assisted val player: Player,
     private val resourceProvider: ResourceProvider
 ) : BaseViewModel() {
-    val points = logic.currentPlayer
-        .combine(logic.turn) { player, turn -> player to turn }
-        .map { logic.remainingPoints(player).toString() }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    val points = logic.state.map { logic.remainingPoints(player).toString() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    val isCurrentPlayer = logic.currentPlayer
-        .combine(logic.turn) { player, turn -> player to turn}
-        .map { (currentPlayer, _) -> currentPlayer == player }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    val isCurrentPlayer = logic.state.map { it.currentPlayer == player }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     @DependsOn("currentPlayer")
     val average: String

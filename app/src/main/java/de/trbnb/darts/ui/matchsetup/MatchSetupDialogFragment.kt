@@ -4,12 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.Button
 import androidx.compose.material.ExperimentalMaterialApi
@@ -17,13 +12,11 @@ import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetState
-import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.RadioButton
 import androidx.compose.material.Slider
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,93 +26,119 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.trbnb.darts.R
 import de.trbnb.darts.models.InOutRule
+import de.trbnb.darts.ui.main.MainViewModel
 import de.trbnb.darts.utils.infinity
-import de.trbnb.mvvmbase.compose.observeAsMutableState
-import java.util.Locale
+import kotlin.text.Typography
 
+@OptIn(ExperimentalLifecycleComposeApi::class, ExperimentalMaterialApi::class)
 @Composable
-fun MatchSetupDialog(viewModelStoreOwner: ViewModelStoreOwner) {
-    val viewModel = hiltViewModel<MatchSetupViewModel>(viewModelStoreOwner)
-    MatchSetupDialogTemplate(
-        pointsState = viewModel::points.observeAsMutableState(),
-        setsState = viewModel::sets.observeAsMutableState(),
-        legsState = viewModel::legs.observeAsMutableState(),
-        outRuleSelection = viewModel::outRule.observeAsMutableState(),
-        inRuleSelection = viewModel::inRule.observeAsMutableState()
-    )
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun MatchSetupDialogTemplate(
-    pointsState: MutableState<Int> = mutableStateOf(301),
-    setsState: MutableState<Int> = mutableStateOf(2),
-    legsState: MutableState<Int> = mutableStateOf(3),
-    outRuleSelection: MutableState<InOutRule> = mutableStateOf(InOutRule.STRAIGHT),
-    inRuleSelection: MutableState<InOutRule> = mutableStateOf(InOutRule.DOUBLE),
+fun MatchSetupDialog(
+    sheetState: ModalBottomSheetState,
+    onStartMatchClick: () -> Unit
 ) {
+    val viewModel = hiltViewModel<MainViewModel>()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     ModalBottomSheetLayout(
-        sheetState = ModalBottomSheetState(ModalBottomSheetValue.Expanded),
+        sheetState = sheetState,
         sheetContent = {
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-                    .border(BorderStroke(1.dp, MaterialTheme.colors.secondary), MaterialTheme.shapes.medium)
-                    .padding(8.dp)
-            ) {
-                Text(
-                    "Punkte".toUpperCase(Locale.getDefault()),
-                    Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.subtitle2
-                )
-
-                //Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colors.secondary).padding(top = 4.dp))
-
-                Row {
-                    Text(
-                        pointsState.value.toString(),
-                        Modifier
-                            .width(64.dp)
-                            .align(Alignment.CenterVertically),
-                        textAlign = TextAlign.End
-                    )
-                    Slider(
-                        pointsState.value.toFloat(),
-                        { pointsState.value = it.toInt() },
-                        valueRange = 101f..1001f,
-                        steps = 100
-                    )
+            MatchSetupDialogTemplate(
+                points = uiState.points,
+                sets = uiState.sets,
+                legs = uiState.legs,
+                outRule = uiState.outRule,
+                inRule = uiState.inRule,
+                onPointsChanged = viewModel::setPoints,
+                onSetsChanged = viewModel::setSets,
+                onLegsChanged = viewModel::setLegs,
+                onOutRuleChanged = viewModel::setOutRule,
+                onInRuleChanged = viewModel::setInRule,
+                onStartMatchClick = {
+                    viewModel.createMatch()
+                    onStartMatchClick()
                 }
-                SetOrLegSetting("Sets", setsState, 1f..10f)
-                SetOrLegSetting("Legs", legsState, 0f..20f)
-            }
-
-            OutOrInRule("Out rule", outRuleSelection)
-            OutOrInRule("In rule", inRuleSelection)
-
-            Button(onClick = {}, Modifier.fillMaxWidth().padding(8.dp)) {
-                Icon(
-                    painterResource(R.drawable.ic_darts_board_24dp),
-                    contentDescription = null,
-                    Modifier.padding(end = 8.dp)
-                )
-                Text("GAME ON!")
-            }
+            )
         },
         content = {}
     )
 }
 
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Composable
+fun MatchSetupDialogTemplate(
+    points: Int = 301,
+    onPointsChanged: (points: Int) -> Unit = {},
+    sets: Int = 2,
+    onSetsChanged: (sets: Int) -> Unit = {},
+    legs: Int = 3,
+    onLegsChanged: (legs: Int) -> Unit = {},
+    outRule: InOutRule = InOutRule.STRAIGHT,
+    onOutRuleChanged: (outRule: InOutRule) -> Unit = {},
+    inRule: InOutRule = InOutRule.DOUBLE,
+    onInRuleChanged: (inRule: InOutRule) -> Unit = {},
+    onStartMatchClick: () -> Unit = {}
+) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .border(BorderStroke(1.dp, MaterialTheme.colors.secondary), MaterialTheme.shapes.medium)
+            .padding(8.dp)
+    ) {
+        Text(
+            "Punkte".uppercase(),
+            Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.subtitle2
+        )
+
+        //Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colors.secondary).padding(top = 4.dp))
+
+        Row {
+            Text(
+                points.toString(),
+                Modifier
+                    .width(64.dp)
+                    .align(Alignment.CenterVertically),
+                textAlign = TextAlign.End
+            )
+            Slider(
+                points.toFloat(),
+                { onPointsChanged(it.toInt()) },
+                valueRange = 101f..1001f,
+                steps = 100
+            )
+        }
+        SetOrLegSetting("Sets", sets, onSetsChanged, 1f..10f)
+        SetOrLegSetting(if (legs == 0) "∞" else legs.toString(), legs, onLegsChanged, 0f..20f)
+    }
+
+    OutOrInRule("Out rule", outRule, onOutRuleChanged)
+    OutOrInRule("In rule", inRule, onInRuleChanged)
+
+    Button(
+        onClick = onStartMatchClick,
+        Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        Icon(
+            painterResource(R.drawable.ic_darts_board_24dp),
+            contentDescription = null,
+            Modifier.padding(end = 8.dp)
+        )
+        Text("GAME ON!")
+    }
+}
+
 @Composable
 fun SetOrLegSetting(
-    text: String = "Sets",
-    numberSettings: MutableState<Int> = mutableStateOf(2),
+    text: String,
+    value: Int,
+    onValueChanged: (value: Int) -> Unit,
     range: ClosedFloatingPointRange<Float>
 ) = Row(verticalAlignment = Alignment.CenterVertically) {
     Row(Modifier.width(64.dp)) {
@@ -132,21 +151,21 @@ fun SetOrLegSetting(
             color = MaterialTheme.colors.onPrimary
         )
         Text(
-            numberSettings.value.takeUnless { it == 0 }?.toString() ?: Typography.infinity.toString(),
+            value.takeUnless { it == 0 }?.toString() ?: Typography.infinity.toString(),
             Modifier.fillMaxWidth(),
             textAlign = TextAlign.End
         )
     }
     Slider(
-        numberSettings.value.toFloat(),
-        { numberSettings.value = it.toInt() },
+        value.toFloat(),
+        { onValueChanged(it.toInt()) },
         valueRange = range,
         steps = 1
     )
 }
 
 @Composable
-fun OutOrInRule(text: String, selectedState: MutableState<InOutRule>) {
+fun OutOrInRule(text: String, value: InOutRule, onValueChanged: (value: InOutRule) -> Unit) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -155,8 +174,10 @@ fun OutOrInRule(text: String, selectedState: MutableState<InOutRule>) {
             .padding(8.dp)
     ) {
         Text(
-            text.toUpperCase(Locale.getDefault()),
-            Modifier.fillMaxWidth().padding(bottom = 8.dp),
+            text.uppercase(),
+            Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.subtitle2
         )
@@ -167,9 +188,9 @@ fun OutOrInRule(text: String, selectedState: MutableState<InOutRule>) {
         ) {
             InOutRule.values().forEach { rule ->
                 RadioButton(
-                    text = rule.toString().toLowerCase(Locale.getDefault()),
-                    selected = selectedState.value == rule,
-                    onClick = { selectedState.value = rule }
+                    text = rule.toString().lowercase(),
+                    selected = value == rule,
+                    onClick = { onValueChanged(rule) }
                 )
             }
         }

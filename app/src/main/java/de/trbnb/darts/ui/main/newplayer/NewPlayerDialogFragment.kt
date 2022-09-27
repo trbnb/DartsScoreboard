@@ -9,88 +9,105 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.Button
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
-import androidx.compose.material.ModalBottomSheetLayout
-import androidx.compose.material.ModalBottomSheetValue
-import androidx.compose.material.Text
-import androidx.compose.material.TextButton
-import androidx.compose.material.TextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.trbnb.darts.ui.customview.ColorPicker
+import de.trbnb.mvvmbase.commands.invokeSafely
+import de.trbnb.mvvmbase.compose.observeAsMutableState
 
-/*
-@AndroidEntryPoint
-class NewPlayerDialogFragment : HiltMvvmBindingBottomSheetFragment<NewPlayerViewModel, DialogNewPlayerBinding>(
-    R.layout.dialog_new_player
+@OptIn(ExperimentalMaterialApi::class, ExperimentalLifecycleComposeApi::class)
+@Composable
+fun NewPlayerSheet(
+    sheetState: ModalBottomSheetState,
+    onDismiss: () -> Unit,
+    content: @Composable () -> Unit = {}
 ) {
-    override fun onCreateDialog(savedInstanceState: Bundle?) = super.onCreateDialog(savedInstanceState).also { dialog ->
-        (dialog as? BottomSheetDialog)?.behavior?.isHideable = false
-    }
+    val viewModel = hiltViewModel<NewPlayerViewModel>()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    override fun onBindingCreated(binding: DialogNewPlayerBinding) {
-        super.onBindingCreated(binding)
-
-        binding.nameInputEditText.post {
-            binding.nameInputEditText.windowInsetsController?.show(WindowInsets.Type.ime())
-        }
-    }
-
-    override fun onEvent(event: Event) {
-        super.onEvent(event)
-
-        when(event) {
-            is CloseEvent -> dismiss()
-        }
-    }
-}*/
+    NewPlayerDialogTemplate(
+        sheetState,
+        name = uiState.name,
+        onNameChanged = { viewModel.set(name = it) },
+        color = Color(uiState.color),
+        onColorChanged = { viewModel.set(color = it.value) },
+        createButtonEnabled = true,
+        onCancel = onDismiss,
+        onConfirm = {
+            viewModel.create()
+            onDismiss()
+        },
+        content = content
+    )
+}
 
 @OptIn(ExperimentalMaterialApi::class)
 @Preview
 @Composable
 fun NewPlayerDialogTemplate(
-    nameState: MutableState<String> = mutableStateOf(""),
-    colorState: MutableState<Color> = mutableStateOf(Color.Red),
+    sheetState: ModalBottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Expanded),
+    name: String = "",
+    onNameChanged: (name: String) -> Unit = {},
+    color: Color = Color.Red,
+    onColorChanged: (color: Color) -> Unit = {},
+    createButtonEnabled: Boolean = true,
     onCancel: () -> Unit = {},
-    onConfirm: () -> Unit = {}
+    onConfirm: () -> Unit = {},
+    content: @Composable () -> Unit = {}
 ) {
     ModalBottomSheetLayout(
-        sheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Expanded),
-        content = {},
+        sheetState = sheetState,
+        content = content,
         sheetContent = {
             Column(
                 Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                val focusManager = LocalFocusManager.current
                 TextField(
-                    nameState.value,
+                    name,
                     modifier = Modifier.fillMaxWidth(),
-                    onValueChange = { nameState.value },
+                    onValueChange = onNameChanged,
                     leadingIcon = { Icon(Icons.Default.Person, null) },
-                    label = { Text("Name") }
+                    label = { Text("Name") },
+                    singleLine = true,
+                    keyboardActions = KeyboardActions {
+                        focusManager.clearFocus(true)
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        KeyboardCapitalization.Words,
+                        autoCorrect = true,
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Done
+                    )
                 )
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         Modifier
-                            .background(colorState.value, CircleShape)
+                            .background(color, CircleShape)
                             .size(64.dp))
 
                     ColorPicker(
-                        color = colorState.value,
-                        onColorChanged = { colorState.value = it },
+                        color = color,
+                        onColorChanged = onColorChanged,
                         Modifier
                             .fillMaxWidth()
                             .padding(start = 32.dp)
@@ -102,7 +119,7 @@ fun NewPlayerDialogTemplate(
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                 ) {
                     TextButton(onClick = onCancel) { Text(stringResource(android.R.string.cancel)) }
-                    Button(onClick = onConfirm) { Text("Erstellen") }
+                    Button(onClick = onConfirm, enabled = createButtonEnabled) { Text("Erstellen") }
                 }
             }
         }

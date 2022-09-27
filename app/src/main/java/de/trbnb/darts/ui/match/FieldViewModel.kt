@@ -22,7 +22,7 @@ class FieldViewModel(
     val text = buildDescription(field, multiplier)
 
     @ExperimentalCoroutinesApi
-    val isEnabled by logic.turnState.map { it is TurnState.Open }.observe(defaultValue = false)
+    val isEnabled by logic.state.map { it.turnState is TurnState.Open }.observe(defaultValue = false)
 
     @get:ColorRes
     val backgroundColorRes: Int = when {

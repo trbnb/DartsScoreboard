@@ -10,12 +10,10 @@ import de.trbnb.darts.models.PlayerOrder
 import de.trbnb.darts.models.PlayerStartOrder
 import de.trbnb.darts.players.PlayerRepository
 import de.trbnb.darts.ui.events.StartMatchEvent
-import de.trbnb.mvvmbase.DependsOn
-import de.trbnb.mvvmbase.commands.simpleCommand
-import de.trbnb.mvvmbase.observableproperty.observable
 import de.trbnb.mvvmbase.savedstate.BaseStateSavingViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -24,35 +22,46 @@ class MatchSetupViewModel @Inject constructor(
     private val matchFactory: MatchFactory,
     private val playerRepository: PlayerRepository
 ) : BaseStateSavingViewModel(savedStateHandle) {
-    var playerIds by observable<List<UUID>>(listOf<UUID>())
+    private val _uiState: MutableStateFlow<UiState> = MutableStateFlow(
+        UiState(
+            points = 301,
+            legs = 0,
+            sets = 0,
+            outRule = InOutRule.STRAIGHT,
+            inRule = InOutRule.STRAIGHT
+        )
+    )
+    val uiState = _uiState.asStateFlow()
 
-    val startMatchCommand = simpleCommand {
-        createMatch()
+    fun setPoints(points: Int) {
+        _uiState.value = _uiState.value.copy(points = points)
     }
 
-    var points by observable(301).distinct()
+    fun setSets(sets: Int) {
+        _uiState.value = _uiState.value.copy(sets = sets)
+    }
 
-    var legs by observable(0).distinct()
+    fun setLegs(legs: Int) {
+        _uiState.value = _uiState.value.copy(legs = legs)
+    }
 
-    @DependsOn("legs")
-    val legsText: String
-        get() = if (legs == 0) "∞" else legs.toString()
+    fun setOutRule(outRule: InOutRule) {
+        _uiState.value = _uiState.value.copy(outRule = outRule)
+    }
 
-    var sets by observable(1).distinct()
+    fun setInRule(inRule: InOutRule) {
+        _uiState.value = _uiState.value.copy(inRule = inRule)
+    }
 
-    var outRule by observable(InOutRule.STRAIGHT).distinct()
-
-    var inRule by observable(InOutRule.STRAIGHT).distinct()
-
-    private fun createMatch() = viewModelScope.launch {
-        val selectedPlayers = playerRepository.getByIds(playerIds)
+    fun createMatch() = viewModelScope.launch {
+        val selectedPlayers = playerRepository.getByIds(emptyList())
 
         val matchOptions = MatchOptions(
-            points = points,
-            sets = sets,
-            legs = legs.takeUnless { it == 0 } ?: Int.MAX_VALUE,
-            inRule = inRule,
-            outRule = outRule,
+            points = uiState.value.points,
+            sets = uiState.value.sets,
+            legs = uiState.value.legs,
+            inRule = uiState.value.inRule,
+            outRule = uiState.value.outRule,
             playerStartOrder = PlayerStartOrder.SHUFFLE,
             playerOrder = PlayerOrder.WORST_STARTS
         )
@@ -60,5 +69,13 @@ class MatchSetupViewModel @Inject constructor(
         matchFactory.newMatch(selectedPlayers, matchOptions)
         eventChannel(StartMatchEvent)
     }
+
+    data class UiState(
+        val points: Int,
+        val legs: Int,
+        val sets: Int,
+        val outRule: InOutRule,
+        val inRule: InOutRule
+    )
 }
 

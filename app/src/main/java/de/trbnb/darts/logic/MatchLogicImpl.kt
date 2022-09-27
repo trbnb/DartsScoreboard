@@ -2,37 +2,58 @@ package de.trbnb.darts.logic
 
 import de.trbnb.darts.logic.finish.FinishSuggestionLogic
 import de.trbnb.darts.models.*
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import java.util.ArrayDeque
-import java.util.Deque
-import java.util.Stack
+import java.util.*
 
-class MatchLogicImpl(override val match: Match) : MatchLogic {
-    private var currentPlayerIndex = 0
-        set(value) {
-            field = if (value > match.players.lastIndex) 0 else value
-
-            currentPlayer.value = playerOrder.value[field]
-        }
-
+class MatchLogicImpl(
+    override val match: Match,
+    private val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+) : MatchLogic, CoroutineScope by coroutineScope {
     private var currentSet = 0
     private var currentLeg = 0
 
     override val finishSuggestionLogic = FinishSuggestionLogic(match.matchOptions.outRule)
 
-    override val playerOrder = MutableStateFlow(match.players.let { players ->
-        when (match.matchOptions.playerStartOrder) {
-            PlayerStartOrder.AS_GIVEN -> players
-            PlayerStartOrder.SHUFFLE -> players.shuffled()
+    private val _state = run<MutableStateFlow<StateImpl>> {
+        val playerOrder = match.players.let { players ->
+            when (match.matchOptions.playerStartOrder) {
+                PlayerStartOrder.AS_GIVEN -> players
+                PlayerStartOrder.SHUFFLE -> players.shuffled()
+            }
         }
-    })
-    override val currentPlayer = MutableStateFlow(playerOrder.value[currentPlayerIndex])
+        val turn = Turn()
+        MutableStateFlow(
+            StateImpl(
+                match = match,
+                currentPlayerIndex = 0,
+                playerOrder = playerOrder,
+                currentTurn = turn,
+                suggestedFinishes = null
+            )
+        )
+    }
+    override val state: StateFlow<MatchLogic.State> = _state.asStateFlow()
+
+    private var currentPlayerIndex: Int
+        get() = _state.value.currentPlayerIndex
+        set(value) {
+            _state.value = _state.value.copy(
+                currentPlayerIndex = if (value > match.players.lastIndex) 0 else value
+            )
+        }
+
+    private var suggestionCalcJob: Job? = null
 
     override val gameEnded = CompletableDeferred<Unit>()
 
     private val previousTurns: Deque<Turn> = ArrayDeque()
+
+    init {
+        _state.distinctUntilChanged { old, new -> old.currentTurn == new.currentTurn }
+            .onEach { calcSuggestedFinish() }
+            .launchIn(this)
+    }
 
     private fun nextPlayer() {
         currentPlayerIndex++
@@ -41,7 +62,9 @@ class MatchLogicImpl(override val match: Match) : MatchLogic {
     }
 
     private fun newTurn() {
-        turn.value = previousTurns.poll() ?: Turn()
+        _state.value = _state.value.copy(
+            currentTurn = previousTurns.poll() ?: Turn()
+        )
     }
 
     override fun currentParticipation(player: Player): Pair<SetParticipation, LegParticipation> {
@@ -58,57 +81,71 @@ class MatchLogicImpl(override val match: Match) : MatchLogic {
 
     override fun remainingPoints(player: Player) = match.matchOptions.points - scoredPoints(player)
 
-    override val turn = MutableStateFlow(Turn())
-    override val remainingPoints: Flow<Int> = turn.map { remainingPoints() }
-    override val turnState: Flow<TurnState> = turn.map { turn ->
-        when {
-            turn.first?.state == ThrowState.BUST -> TurnState.Bust
-            turn.second?.state == ThrowState.BUST -> TurnState.Bust
-            turn.third?.state == ThrowState.BUST -> TurnState.Bust
-            remainingPoints(currentPlayer.value) - turn.value == 0 -> TurnState.Done
-            turn.first == null -> TurnState.Open(ThrowNumber.ONE)
-            turn.second == null -> TurnState.Open(ThrowNumber.TWO)
-            turn.third == null -> TurnState.Open(ThrowNumber.THREE)
+    private fun Turn.turnState(currentPlayer: Player): TurnState {
+        return when {
+            first?.state == ThrowState.BUST -> TurnState.Bust
+            second?.state == ThrowState.BUST -> TurnState.Bust
+            third?.state == ThrowState.BUST -> TurnState.Bust
+            remainingPoints(currentPlayer) - value == 0 -> TurnState.Done
+            first == null -> TurnState.Open(ThrowNumber.ONE)
+            second == null -> TurnState.Open(ThrowNumber.TWO)
+            third == null -> TurnState.Open(ThrowNumber.THREE)
             else -> TurnState.Done
         }
     }
 
-    override val suggestedFinish: Flow<List<PotentialThrow>?> = turn.map { turn ->
-        val remainingThrows = listOf(turn.first, turn.second, turn.third).count { it == null }
-        finishSuggestionLogic.getOne(remainingPoints(), remainingThrows.takeUnless { it == 0 } ?: 3)
-    }.flowOn(Dispatchers.IO)
+    private fun calcSuggestedFinish() {
+        suggestionCalcJob?.cancel()
+        suggestionCalcJob = launch {
+            val turn = _state.value.currentTurn
+            val remainingThrows = listOf(turn.first, turn.second, turn.third).count { it == null }
 
-    override val suggestedFinishes: Flow<List<List<PotentialThrow>>> = turn.map { turn ->
-        val remainingThrows = listOf(turn.first, turn.second, turn.third).count { it == null }
-        finishSuggestionLogic.getAll(remainingPoints(), remainingThrows.takeUnless { it == 0 } ?: 3)
-            .sortedBy { it.size }
+            if (!isActive) {
+                return@launch
+            }
+
+            val suggestedFinishes = finishSuggestionLogic.getAll(
+                remainingPoints(),
+                remainingThrows.takeUnless { it == 0 } ?: 3
+            ).sortedBy { it.size }
+
+            if (!isActive) {
+                return@launch
+            }
+
+            _state.value = _state.value.copy(suggestedFinishes = suggestedFinishes)
+        }
     }
 
     override fun addThrow(_throw: Throw) {
-        val oldTurn = turn.value
+        val oldTurn = _state.value.currentTurn
 
-        turn.value = when {
-            oldTurn.first == null -> oldTurn.copy(first = _throw)
-            oldTurn.second == null -> oldTurn.copy(second = _throw)
-            oldTurn.third == null -> oldTurn.copy(third = _throw)
-            else -> return
-        }.let(::reevaluate)
+        _state.value = _state.value.copy(
+            currentTurn = when {
+                oldTurn.first == null -> oldTurn.copy(first = _throw)
+                oldTurn.second == null -> oldTurn.copy(second = _throw)
+                oldTurn.third == null -> oldTurn.copy(third = _throw)
+                else -> return
+            }.let(::reevaluate)
+        )
     }
 
     override fun fellOff(throwNumber: ThrowNumber, fellOff: Boolean) {
-        val turn = turn.value
+        val turn = _state.value.currentTurn
 
         val throwState = if (fellOff) ThrowState.FALLEN_OFF else ThrowState.OK
 
-        this.turn.value = turn.copy(
-            first = turn.first.takeUnless { throwNumber == ThrowNumber.ONE } ?: turn.first?.copy(state = throwState),
-            second = turn.second.takeUnless { throwNumber == ThrowNumber.TWO } ?: turn.second?.copy(state = throwState),
-            third = turn.third.takeUnless { throwNumber == ThrowNumber.THREE } ?: turn.third?.copy(state = throwState)
-        ).let(::reevaluate)
+        _state.value = _state.value.copy(
+            currentTurn = turn.copy(
+                first = turn.first.takeUnless { throwNumber == ThrowNumber.ONE } ?: turn.first?.copy(state = throwState),
+                second = turn.second.takeUnless { throwNumber == ThrowNumber.TWO } ?: turn.second?.copy(state = throwState),
+                third = turn.third.takeUnless { throwNumber == ThrowNumber.THREE } ?: turn.third?.copy(state = throwState)
+            ).let(::reevaluate)
+        )
     }
 
     override fun undoThrow() {
-        val turn = turn.value
+        val turn = _state.value.currentTurn
         removeThrow(when {
             turn.third != null -> ThrowNumber.THREE
             turn.second != null -> ThrowNumber.TWO
@@ -118,19 +155,22 @@ class MatchLogicImpl(override val match: Match) : MatchLogic {
     }
 
     override fun removeThrow(throwNumber: ThrowNumber) {
-        turn.value = when (throwNumber) {
-            ThrowNumber.ONE -> turn.value.copy(first = null)
-            ThrowNumber.TWO -> turn.value.copy(second = null)
-            ThrowNumber.THREE -> turn.value.copy(third = null)
-        }.let(::reevaluate)
+        val currentTurn = _state.value.currentTurn
+        _state.value = _state.value.copy(
+            currentTurn = when (throwNumber) {
+                ThrowNumber.ONE -> currentTurn.copy(first = null)
+                ThrowNumber.TWO -> currentTurn.copy(second = null)
+                ThrowNumber.THREE -> currentTurn.copy(third = null)
+            }.let(::reevaluate)
+        )
     }
 
     override fun confirmTurn() {
-        val currentPlayer = currentPlayer.value
+        val currentPlayer = _state.value.currentPlayer
         val participation = match[currentPlayer]
         val set = participation[currentSet]
         val leg = set[currentLeg]
-        leg.addTurn(turn.value)
+        leg.addTurn(_state.value.currentTurn)
 
         val legWon = if (remainingPoints(currentPlayer) == 0) {
             match.participations
@@ -151,10 +191,13 @@ class MatchLogicImpl(override val match: Match) : MatchLogic {
         } else false
 
         if (legWon) {
-            playerOrder.value = when (match.matchOptions.playerOrder) {
-                PlayerOrder.SHUFFLE -> playerOrder.value.shuffled()
-                PlayerOrder.WORST_STARTS -> playerOrder.value.sortedByDescending(::remainingPoints)
-            }
+            val playerOrder = _state.value.playerOrder
+            _state.value = _state.value.copy(
+                playerOrder = when (match.matchOptions.playerOrder) {
+                    PlayerOrder.SHUFFLE -> playerOrder.shuffled()
+                    PlayerOrder.WORST_STARTS -> playerOrder.sortedByDescending(::remainingPoints)
+                }
+            )
 
             currentPlayerIndex = 0
         }
@@ -181,15 +224,18 @@ class MatchLogicImpl(override val match: Match) : MatchLogic {
 
     }
 
-    private fun remainingPoints() = remainingPoints(currentPlayer.value) - turn.value.value
+    private fun remainingPoints(): Int {
+        return remainingPoints(_state.value.currentPlayer) - _state.value.currentTurn.value
+    }
 
     private fun reevaluate(turn: Turn): Turn {
         val throws = listOf(turn.first, turn.second, turn.third)
+        val currentPlayer = _state.value.currentPlayer
 
         var scoredPoints = 0
         var wasBust = false
-        val previouslyScoredPoints = scoredPoints(currentPlayer.value)
-        val previouslyRemainingPoints = remainingPoints(currentPlayer.value)
+        val previouslyScoredPoints = scoredPoints(currentPlayer)
+        val previouslyRemainingPoints = remainingPoints(currentPlayer)
 
         val (newFirst, newSecond, newThird) = throws.map { _throw ->
             if (_throw == null) return@map null
@@ -232,7 +278,7 @@ class MatchLogicImpl(override val match: Match) : MatchLogic {
 
     override fun canUndoTurnConfirmation(): Boolean {
         val previousPlayerIndex = (currentPlayerIndex - 1).takeUnless { it < 0 } ?: match.players.lastIndex
-        val previousPlayer = playerOrder.value[previousPlayerIndex]
+        val previousPlayer = _state.value.playerOrder[previousPlayerIndex]
 
         val (_, leg) = currentParticipation(previousPlayer)
 
@@ -244,17 +290,61 @@ class MatchLogicImpl(override val match: Match) : MatchLogic {
 
         val previousPlayerIndex = (currentPlayerIndex - 1).takeUnless { it < 0 } ?: match.players.lastIndex
 
-        val (_, leg) = currentParticipation(playerOrder.value[previousPlayerIndex])
+        val (_, leg) = currentParticipation(_state.value.playerOrder[previousPlayerIndex])
 
         val lastTurn = leg.removeLast() ?: return
 
-        val currentTurn = turn.value
+        val currentTurn = _state.value.currentTurn
 
         if (currentTurn.first != null && currentTurn.second != null && currentTurn.third != null) {
             previousTurns.push(currentTurn)
         }
 
         currentPlayerIndex = previousPlayerIndex
-        turn.value = lastTurn
+        _state.value = _state.value.copy(currentTurn = lastTurn)
     }
+
+    private inner class StateImpl(
+        override val match: Match,
+        val currentPlayerIndex: Int,
+        override val playerOrder: List<Player>,
+        override val currentTurn: Turn,
+        override val suggestedFinishes: List<List<PotentialThrow>>?
+    ) : MatchLogic.State {
+        override val turnState: TurnState = currentTurn.turnState(currentPlayer)
+
+        override val currentPlayer: Player
+            get() = playerOrder[currentPlayerIndex]
+
+        override val remainingPoints: Int
+            get() = remainingPoints()
+
+        override val currentParticipationStats = playerOrder.map { player ->
+            val (set, leg) = currentParticipation(player)
+            CurrentParticipationStatsImpl(player, match[player], set, leg, remainingPoints(player))
+        }
+
+        fun copy(
+            currentPlayerIndex: Int = this.currentPlayerIndex,
+            playerOrder: List<Player> = this.playerOrder,
+            currentTurn: Turn = this.currentTurn,
+            suggestedFinishes: List<List<PotentialThrow>>? = this.suggestedFinishes
+        ): StateImpl = StateImpl(
+            match = match,
+            currentPlayerIndex = currentPlayerIndex,
+            playerOrder = playerOrder,
+            currentTurn = currentTurn,
+            suggestedFinishes = suggestedFinishes?.takeUnless {
+                this.currentTurn != currentTurn && this.suggestedFinishes === suggestedFinishes
+            }
+        )
+    }
+
+    class CurrentParticipationStatsImpl(
+        override val player: Player,
+        override val matchParticipation: MatchParticipation,
+        override val currentSet: SetParticipation,
+        override val currentLeg: LegParticipation,
+        override val remainingPoints: Int
+    ) : MatchLogic.CurrentParticipationStats
 }

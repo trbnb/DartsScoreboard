@@ -2,134 +2,202 @@ package de.trbnb.darts.ui.main
 
 import android.graphics.Color.WHITE
 import android.os.Bundle
-import android.view.Menu
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.Checkbox
-import androidx.compose.material.FloatingActionButton
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.twotone.Delete
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import de.trbnb.darts.R
 import de.trbnb.darts.models.Player
+import de.trbnb.darts.ui.main.newplayer.NewPlayerSheet
+import de.trbnb.darts.ui.matchsetup.MatchSetupDialog
+import de.trbnb.darts.ui.navigation.LocalNavController
+import de.trbnb.darts.ui.navigation.NavHost
+import de.trbnb.darts.ui.navigation.Screen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import java.util.UUID
+import java.util.*
 
 @ExperimentalCoroutinesApi
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity(R.layout.activity_main) {
-    private val viewModel by viewModels<MainViewModel>()
-
+class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //viewModel.eventChannel.addListener(this, ::onEvent)
 
         setContent {
-            MainScreen()
+            NavHost()
         }
-
-        supportActionBar?.subtitle = "Spielerauswahl"
     }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        return menuInflater.inflate(R.menu.activity_main, menu).let { true }
-    }
-
-    /*override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.new_player -> NewPlayerDialogFragment().show(supportFragmentManager, null)
-        }
-
-        return super.onOptionsItemSelected(item)
-    }
-
-    private fun onEvent(event: Event) {
-        when (event) {
-            is MainEvent.ConfigureMatch -> MatchSetupDialogFragment(event.playerIds)
-                .show(supportFragmentManager, null)
-        }
-    }*/
 }
 
 @Composable
 @Preview(name = "Meh", showBackground = true, backgroundColor = WHITE.toLong())
 fun Preview() {
-    ScaffoldTest(
+    PlayerList(
         players = listOf(
             Player(UUID.randomUUID(), "Thorben", 0),
             Player(UUID.randomUUID(), "Kristina", 0),
             Player(UUID.randomUUID(), "Andreas", 0),
             Player(UUID.randomUUID(), "Thalea", 0)
-        ).map { PlayerItem(it) {} },
-        onFabClicked = {}
+        ).map { MainViewModel.PlayerItem(it, false) },
+        false,
+        onPlayerSelectionChanged = { _, _ -> },
+        onNewPlayerClick = {},
+        onPlayerRemove = {},
+        onMatchSetupClick = {}
+    )
+}
+
+@OptIn(ExperimentalLifecycleComposeApi::class, ExperimentalMaterialApi::class)
+@Composable
+fun MainScreen() {
+    val viewModel = hiltViewModel<MainViewModel>()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    var isNewPlayerSheetVisible by remember { mutableStateOf(false) }
+    val newPlayerSheetState = rememberModalBottomSheetState(
+        ModalBottomSheetValue.Hidden,
+        confirmStateChange = { modalBottomSheetValue ->
+            isNewPlayerSheetVisible = when (modalBottomSheetValue) {
+                ModalBottomSheetValue.Hidden -> false
+                ModalBottomSheetValue.Expanded, ModalBottomSheetValue.HalfExpanded -> true
+            }
+            true
+        }
+    )
+
+    LaunchedEffect(isNewPlayerSheetVisible) {
+        if (isNewPlayerSheetVisible) {
+            newPlayerSheetState.animateTo(ModalBottomSheetValue.Expanded)
+        } else {
+            newPlayerSheetState.hide()
+        }
+    }
+
+    var isMatchSetupVisible by remember { mutableStateOf(false) }
+    val matchSetupSheetState = rememberModalBottomSheetState(
+        ModalBottomSheetValue.Hidden,
+        confirmStateChange = { modalBottomSheetValue ->
+            isMatchSetupVisible = when (modalBottomSheetValue) {
+                ModalBottomSheetValue.Hidden -> false
+                ModalBottomSheetValue.Expanded, ModalBottomSheetValue.HalfExpanded -> true
+            }
+            true
+        }
+    )
+
+    LaunchedEffect(isMatchSetupVisible) {
+        if (isMatchSetupVisible) {
+            matchSetupSheetState.animateTo(ModalBottomSheetValue.Expanded)
+        } else {
+            matchSetupSheetState.hide()
+        }
+    }
+
+    BackHandler(enabled = isNewPlayerSheetVisible) { isNewPlayerSheetVisible = false }
+
+    PlayerList(
+        players = uiState.players,
+        canStartGame = uiState.canStartGame,
+        onPlayerSelectionChanged = viewModel::togglePlayerSelection,
+        onNewPlayerClick = { isNewPlayerSheetVisible = true },
+        onPlayerRemove = viewModel::deletePlayer,
+        onMatchSetupClick = { isMatchSetupVisible = true }
+    )
+
+    NewPlayerSheet(
+        sheetState = newPlayerSheetState,
+        onDismiss = { isNewPlayerSheetVisible = false }
+    )
+
+    val navController = LocalNavController.current
+
+    MatchSetupDialog(
+        matchSetupSheetState,
+        onStartMatchClick = {
+            isMatchSetupVisible = false
+            navController.navigate(Screen.Match.route)
+        }
     )
 }
 
 @Composable
-fun ScaffoldTest(players: List<PlayerItem>, onFabClicked: () -> Unit) {
+fun PlayerList(
+    players: List<MainViewModel.PlayerItem>,
+    canStartGame: Boolean,
+    onPlayerSelectionChanged: (MainViewModel.PlayerItem, Boolean) -> Unit,
+    onNewPlayerClick: () -> Unit,
+    onPlayerRemove: (MainViewModel.PlayerItem) -> Unit,
+    onMatchSetupClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Scaffold(
+        modifier = modifier,
         topBar = {
-            TopAppBar(title = { Text(text = "Darts Scoreboard") })
-         },
-        content = {
-            PlayerList(modifier = Modifier.fillMaxSize() ,players = players)
+            TopAppBar(
+                title = { Text("Darts Scoreboard") },
+                actions = {
+                    Icon(
+                        painterResource(R.drawable.ic_baseline_person_add_24),
+                        "",
+                        Modifier.clickable(onClick = onNewPlayerClick)
+                    )
+                }
+            )
+        },
+        content = { padding ->
+            LazyColumn(Modifier.padding(padding)) {
+                items(players) { playerItem ->
+                    PlayerListRow(
+                        playerItem = playerItem,
+                        onSelected = { onPlayerSelectionChanged(playerItem, it) },
+                        onRemove = { onPlayerRemove(playerItem) }
+                    )
+                }
+            }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onFabClicked) {
-                Icon(imageVector = Icons.Default.PersonAdd, contentDescription = "")
+            AnimatedVisibility(
+                canStartGame,
+                enter = slideInVertically { 2*it },
+                exit = slideOutVertically { 2*it }
+            ) {
+                FloatingActionButton(
+                    onClick = onMatchSetupClick
+                ) {
+                    Icon(painterResource(R.drawable.ic_darts_board_24dp), "")
+                }
             }
         }
     )
 }
 
-@Suppress("EXPERIMENTAL_API_USAGE")
-@Composable
-fun MainScreen() {
-    val viewModel = viewModel<MainViewModel>()
-    val playerState by viewModel.players.collectAsState()
-    PlayerList(players = playerState)
-}
-
-@Composable
-fun PlayerList(modifier: Modifier = Modifier, players: List<PlayerItem>) {
-    LazyColumn(modifier) {
-        items(players) { playerItem ->
-            val isSelected = playerItem.isSelected.collectAsState()
-            PlayerListRow(playerItem.player, isSelected, playerItem::selectPlayer) {}
-        }
-    }
-}
-
 @Composable
 fun PlayerListRow(
-    player: Player,
-    selectedState: State<Boolean>,
+    playerItem: MainViewModel.PlayerItem,
     onSelected: (Boolean) -> Unit,
     onRemove: () -> Unit
 ) {
@@ -141,9 +209,9 @@ fun PlayerListRow(
             drawCircle(color = Color.Red)
             drawCircle(color = Color.Gray, style = Stroke(width = 1.dp.toPx()))
         }
-        Checkbox(checked = selectedState.value, onCheckedChange = onSelected)
+        Checkbox(checked = playerItem.isSelected, onCheckedChange = onSelected)
         Text(
-            text = player.name,
+            text = playerItem.player.name,
             modifier = Modifier
                 .padding(8.dp)
                 .weight(1f)

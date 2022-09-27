@@ -2,64 +2,116 @@ package de.trbnb.darts.ui.main
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.trbnb.darts.models.Player
+import de.trbnb.darts.logic.MatchFactory
+import de.trbnb.darts.models.*
 import de.trbnb.darts.players.PlayerRepository
 import de.trbnb.mvvmbase.BaseViewModel
-import de.trbnb.mvvmbase.commands.ruleCommand
-import de.trbnb.mvvmbase.coroutines.CoroutineViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@ExperimentalCoroutinesApi
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val playerRepository: PlayerRepository
+    private val playerRepository: PlayerRepository,
+    private val matchFactory: MatchFactory
 ) : BaseViewModel() {
-    private val playerSelectedListener: (PlayerViewModel) -> Unit = {
-        startMatchCommand.onEnabledChanged()
-    }
-
-    val players = playerRepository.getAll()
-        .map { players ->
-            players.map {
-                PlayerItem(it) {
-                    viewModelScope.launch {
-                        playerRepository.delete(it)
-                    }
-                }
-            }
-        }
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
-
-    val startMatchCommand = ruleCommand(
-        enabledRule = { players.value.any { it.isSelected.value } },
-        action = { configureMatch() }
+    private val _uiState: MutableStateFlow<UiState> = MutableStateFlow(
+        UiState(
+            points = 301,
+            legs = 0,
+            sets = 1,
+            outRule = InOutRule.STRAIGHT,
+            inRule = InOutRule.STRAIGHT,
+            players = emptyList()
+        )
     )
+    val uiState = _uiState.asStateFlow()
 
-    fun deletePlayer(player: Player) {
+    init {
+        playerRepository.getAll()
+            .onEach { players ->
+                _uiState.value = _uiState.value.copy(
+                    players = players.map { player ->
+                        PlayerItem(
+                            player,
+                            _uiState.value.players.firstOrNull { it.player == player }?.isSelected ?: false
+                        )
+                    }
+                )
+            }
+            .launchIn(viewModelScope)
+    }
+
+    fun setPoints(points: Int) {
+        _uiState.value = _uiState.value.copy(points = points)
+    }
+
+    fun setSets(sets: Int) {
+        _uiState.value = _uiState.value.copy(sets = sets)
+    }
+
+    fun setLegs(legs: Int) {
+        _uiState.value = _uiState.value.copy(legs = legs)
+    }
+
+    fun setOutRule(outRule: InOutRule) {
+        _uiState.value = _uiState.value.copy(outRule = outRule)
+    }
+
+    fun setInRule(inRule: InOutRule) {
+        _uiState.value = _uiState.value.copy(inRule = inRule)
+    }
+
+    fun createMatch() = viewModelScope.launch {
+        val selectedPlayers = _uiState.value.players
+            .filter { it.isSelected }
+            .map { it.player }
+
+        val matchOptions = MatchOptions(
+            points = uiState.value.points,
+            sets = uiState.value.sets,
+            legs = uiState.value.legs,
+            inRule = uiState.value.inRule,
+            outRule = uiState.value.outRule,
+            playerStartOrder = PlayerStartOrder.SHUFFLE,
+            playerOrder = PlayerOrder.WORST_STARTS
+        )
+
+        matchFactory.newMatch(selectedPlayers, matchOptions)
+    }
+
+    fun togglePlayerSelection(playerItem: PlayerItem, selected: Boolean) {
+        _uiState.value = _uiState.value.copy(
+            players = _uiState.value.players.map { oldItem ->
+                oldItem.copy(
+                    isSelected = when (playerItem.player) {
+                        oldItem.player -> selected
+                        else -> oldItem.isSelected
+                    }
+                )
+            }
+        )
+    }
+
+    fun deletePlayer(playerItem: PlayerItem) {
         viewModelScope.launch {
-            playerRepository.delete(player)
+            playerRepository.delete(playerItem.player)
         }
     }
 
-    private fun configureMatch() {
-        val selectedPlayers = players.value
-            .filter { it.isSelected.value }
-            .map { it.player.id }
-
-        eventChannel(MainEvent.ConfigureMatch(selectedPlayers))
+    data class UiState(
+        val points: Int,
+        val legs: Int,
+        val sets: Int,
+        val outRule: InOutRule,
+        val inRule: InOutRule,
+        val players: List<PlayerItem>
+    ) {
+        val canStartGame: Boolean
+            get() = players.any { it.isSelected }
     }
-}
-
-class PlayerItem(val player: Player, val remove: () -> Unit) {
-    val isSelected = MutableStateFlow(false)
-
-    fun selectPlayer(isSelected: Boolean) {
-        this.isSelected.value = isSelected
-    }
+    data class PlayerItem(val player: Player, val isSelected: Boolean)
 }

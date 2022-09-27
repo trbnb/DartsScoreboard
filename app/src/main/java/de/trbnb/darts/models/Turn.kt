@@ -10,3 +10,11 @@ operator fun Turn.get(number: ThrowNumber): Throw? = when (number) {
 
 val Turn.value: Int
     get() = first.value + second.value + third.value
+
+val Turn.nextThrow: ThrowNumber?
+    get() = when {
+        first == null -> ThrowNumber.ONE
+        second == null -> ThrowNumber.TWO
+        third == null -> ThrowNumber.THREE
+        else -> null
+    }

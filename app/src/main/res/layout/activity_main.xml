@@ -30,7 +30,6 @@
             android:drawablePadding="32dp"
             android:padding="64dp"
             android:gravity="center"
-            android:visible="@{vm.players.size() == 0}"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:drawableTint="?android:textColorPrimary"
@@ -49,7 +48,6 @@
             app:icon="@drawable/ic_round_tune_24"
             app:iconTint="@color/white"
             android:text="Match konfigurieren"
-            app:clickCommand="@{vm.startMatchCommand}"
             android:textColor="@color/white"
             tools:ignore="ContentDescription" />
 
