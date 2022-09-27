@@ -1,11 +1,11 @@
 package de.trbnb.darts.ui.main
 
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.trbnb.darts.logic.MatchFactory
 import de.trbnb.darts.models.*
 import de.trbnb.darts.players.PlayerRepository
-import de.trbnb.mvvmbase.BaseViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -17,7 +17,7 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val playerRepository: PlayerRepository,
     private val matchFactory: MatchFactory
-) : BaseViewModel() {
+) : ViewModel() {
     private val _uiState: MutableStateFlow<UiState> = MutableStateFlow(
         UiState(
             points = 301,

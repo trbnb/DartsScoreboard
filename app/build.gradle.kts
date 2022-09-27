@@ -40,7 +40,6 @@ android {
         jvmTarget = "1.8"
     }
     buildFeatures {
-        dataBinding = true
         compose = true
     }
     composeOptions {
@@ -55,8 +54,6 @@ kapt {
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
-    implementation("de.trbnb:mvvmbase-core:3.0.2")
-    implementation("de.trbnb:mvvmbase-coroutines:3.0.2")
     implementation(kotlin("reflect"))
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.5.1")
 

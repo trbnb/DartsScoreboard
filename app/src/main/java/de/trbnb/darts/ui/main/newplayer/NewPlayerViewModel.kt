@@ -1,15 +1,10 @@
 package de.trbnb.darts.ui.main.newplayer
 
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.trbnb.darts.players.PlayerRepository
-import de.trbnb.darts.ui.events.CloseEvent
-import de.trbnb.mvvmbase.BaseViewModel
-import de.trbnb.mvvmbase.bindableproperty.bindable
-import de.trbnb.mvvmbase.bindableproperty.bindableULong
-import de.trbnb.mvvmbase.commands.ruleCommand
-import de.trbnb.mvvmbase.commands.simpleCommand
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -18,7 +13,7 @@ import javax.inject.Inject
 @HiltViewModel
 class NewPlayerViewModel @Inject constructor(
     private val playerRepository: PlayerRepository
-) : BaseViewModel() {
+) : ViewModel() {
     private val _uiState = MutableStateFlow(UiState("", Color.Black.value))
     val uiState = _uiState.asStateFlow()
 
@@ -28,7 +23,7 @@ class NewPlayerViewModel @Inject constructor(
         val (name, color) = uiState.value
         viewModelScope.launch {
             playerRepository.create(name, color.toInt())
-            eventChannel(CloseEvent)
+            _uiState.value = _uiState.value.copy(shouldClose = true)
         }
     }
 
@@ -39,7 +34,11 @@ class NewPlayerViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(name = name, color = color)
     }
 
-    data class UiState(val name: String, val color: ULong) {
+    data class UiState(
+        val name: String,
+        val color: ULong,
+        val shouldClose: Boolean = false
+    ) {
         val canCreate: Boolean get() = name.isNotBlank()
     }
 }
