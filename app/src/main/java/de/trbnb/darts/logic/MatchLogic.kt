@@ -34,6 +34,7 @@ interface MatchLogic {
         val remainingPoints: Int
         val turnState: TurnState
         val suggestedFinishes: List<List<PotentialThrow>>?
+        val canUndoTurnConfirmation: Boolean
     }
 
     interface CurrentParticipationStats {

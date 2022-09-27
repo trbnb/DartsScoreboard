@@ -35,7 +35,9 @@ import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.trbnb.darts.logic.MatchLogic
 import de.trbnb.darts.models.*
+import de.trbnb.darts.utils.Triple
 import de.trbnb.darts.utils.forEach
+import de.trbnb.darts.utils.map
 import de.trbnb.darts.utils.px
 import kotlinx.coroutines.delay
 
@@ -166,43 +168,30 @@ fun PlayerParticipationItemTemplate(
 @Preview(backgroundColor = 0xFFFFFFFF, showBackground = true)
 @Composable
 fun ThrowInfoPreview() {
-    Row(
-        Modifier.fillMaxWidth().height(170.dp)
-    ) {
-        ThrowNumber.values().mapIndexed { index, number ->
+    var enabledState by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(5000)
+            enabledState = !enabledState
+        }
+    }
+    ThrowInfoRow(
+        throwInfos = ThrowNumber.tripple.map { number ->
             MatchViewModel.ThrowInfo(
                 number,
-                isNextThrow = index == 1,
+                isNextThrow = number == ThrowNumber.TWO,
                 _throw = Throw(
                     Field.TWENTY,
                     Multiplier.DOUBLE,
-                    if (index == 1) ThrowState.FALLEN_OFF else ThrowState.OK
+                    if (number == ThrowNumber.THREE) ThrowState.FALLEN_OFF else ThrowState.OK
                 )
             )
-        }.forEach { throwInfo ->
-            ThrowInfoColumn(
-                throwInfo,
-                {},
-                {},
-                Modifier.weight(1f).fillMaxHeight()
-            )
-        }
-        var enabledState by remember { mutableStateOf(true) }
-
-        LaunchedEffect(Unit) {
-            while (true) {
-                delay(5000)
-                enabledState = !enabledState
-            }
-        }
-
-        TotalOverview(
-            301,
-            enabledState,
-            {},
-            Modifier.fillMaxHeight()
-        )
-    }
+        },
+        currentTurnValue = 62,
+        isConfirmTurnAvailable = enabledState,
+        {_, _ ->}, {}, {}
+    )
 }
 
 @Composable
@@ -213,10 +202,29 @@ fun ThrowInfoRow(
     onConfirmTurn: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier
-    ) {
-        uiState.throwInfos.forEach { throwInfo ->
+    ThrowInfoRow(
+        throwInfos = uiState.throwInfos,
+        currentTurnValue = uiState.currentTurn.value,
+        isConfirmTurnAvailable = uiState.isConfirmTurnAvailable,
+        onFallenOffChanged = onFallenOffChanged,
+        onDeleteThrow = onDeleteThrow,
+        onConfirmTurn = onConfirmTurn,
+        modifier = modifier
+    )
+}
+
+@Composable
+fun ThrowInfoRow(
+    throwInfos: Triple<MatchViewModel.ThrowInfo>,
+    currentTurnValue: Int,
+    isConfirmTurnAvailable: Boolean,
+    onFallenOffChanged: (ThrowNumber, Boolean) -> Unit,
+    onDeleteThrow: (ThrowNumber) -> Unit,
+    onConfirmTurn: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier) {
+        throwInfos.forEach { throwInfo ->
             ThrowInfoColumn(
                 throwInfo = throwInfo,
                 onFallenOffChanged = { onFallenOffChanged(throwInfo.number, it) },
@@ -226,8 +234,8 @@ fun ThrowInfoRow(
         }
 
         TotalOverview(
-            uiState.currentTurn.value,
-            confirmEnabled = uiState.isConfirmTurnAvailable,
+            currentTurnValue,
+            confirmEnabled = isConfirmTurnAvailable,
             onConfirm = onConfirmTurn,
             modifier = Modifier.fillMaxHeight()
         )

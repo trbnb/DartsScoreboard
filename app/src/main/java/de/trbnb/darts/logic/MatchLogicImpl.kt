@@ -324,6 +324,8 @@ class MatchLogicImpl(
             CurrentParticipationStatsImpl(player, match[player], set, leg, remainingPoints(player))
         }
 
+        override val canUndoTurnConfirmation: Boolean = canUndoTurnConfirmation()
+
         fun copy(
             currentPlayerIndex: Int = this.currentPlayerIndex,
             playerOrder: List<Player> = this.playerOrder,

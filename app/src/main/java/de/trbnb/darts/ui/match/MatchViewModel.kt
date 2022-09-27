@@ -20,31 +20,17 @@ class MatchViewModel @Inject constructor(
     matchFactory: MatchFactory,
     private val vibrator: Vibrator
 ) : ViewModel() {
-    private val matchLogic = matchFactory.currentMatch.value ?: throw IllegalStateException()
-
     val logic = matchFactory.currentMatch
 
     val matchState = matchFactory.currentMatch
         .flatMapConcat { matchLogic ->
-            matchLogic?.state?.map {
-                System.err.println(matchLogic?.state?.value?.currentPlayer); UiState(it) }
+            matchLogic?.state?.map { UiState(it) }
                 ?: MutableStateFlow(null)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    val subtitle = matchLogic.match.matchOptions.run {
-        "$points · " + when (outRule) {
-            InOutRule.STRAIGHT -> "straight out"
-            InOutRule.DOUBLE -> "double out"
-            InOutRule.TRIPLE -> "triple out"
-            InOutRule.MASTER -> "master out"
-        }
-    }
-
-    val showSets = matchLogic.match.matchOptions.sets > 1
-
-    val info = matchLogic.state
-        .map { state ->
+    val info = logic.value?.state
+        ?.map { state ->
             when {
                 state.turnState == TurnState.Bust -> "BUST" to R.color.info_text_red
                 state.currentParticipationStats.firstOrNull { it.player == state.currentPlayer }?.remainingPoints == 0 -> "WON" to R.color.info_text_green
@@ -64,23 +50,21 @@ class MatchViewModel @Inject constructor(
         logic.value?.removeThrow(throwNumber)
     }
 
-    val canUndoTurn = matchLogic.state
-        .map { matchLogic.canUndoTurnConfirmation() }
-
     init {
-        matchLogic.state.map { it.turnState }.distinctUntilChanged()
+        matchState.map { it?.turnState }
+            .distinctUntilChanged()
             .filterIsInstance<TurnState.Bust>()
-            .onEach { vibrator.vibrateShortly() }
+            .onEach { this.vibrator.vibrateShortly() }
             .launchIn(viewModelScope)
 
         viewModelScope.launch {
-            matchLogic.gameEnded.await()
+            logic.value?.gameEnded?.await()
 
             //eventChannel(CloseEvent)
         }
     }
 
-    fun undoTurn() = matchLogic.undoTurnConfirmation()
+    fun undoTurn() = logic.value?.undoTurnConfirmation()
 
     fun onThrow(_throw: Throw) {
         logic.value?.addThrow(_throw)
@@ -98,6 +82,16 @@ class MatchViewModel @Inject constructor(
         }
 
         val isConfirmTurnAvailable = matchState.turnState !is TurnState.Open
+        val showSets = matchState.match.matchOptions.sets > 1
+
+        val subtitle = matchState.match.matchOptions.run {
+            "$points · " + when (outRule) {
+                InOutRule.STRAIGHT -> "straight out"
+                InOutRule.DOUBLE -> "double out"
+                InOutRule.TRIPLE -> "triple out"
+                InOutRule.MASTER -> "master out"
+            }
+        }
     }
 
     class ThrowInfo(
