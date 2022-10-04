@@ -13,6 +13,8 @@ interface FinishSuggestionLogic {
         }
     }
 
+    fun isPossible(points: Int, remainingThrows: Int): Boolean = points <= (remainingThrows * 60)
+
     fun getAll(points: Int, remainingThrows: Int): List<List<PotentialThrow>>
 
     fun getOne(points: Int, remainingThrows: Int): List<PotentialThrow>? {

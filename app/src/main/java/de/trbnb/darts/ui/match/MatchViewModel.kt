@@ -3,15 +3,33 @@ package de.trbnb.darts.ui.match
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.trbnb.darts.R
 import de.trbnb.darts.logic.MatchFactory
 import de.trbnb.darts.logic.MatchLogic
 import de.trbnb.darts.logic.TurnState
-import de.trbnb.darts.models.*
+import de.trbnb.darts.models.Field
+import de.trbnb.darts.models.InOutRule
+import de.trbnb.darts.models.Multiplier
+import de.trbnb.darts.models.Throw
+import de.trbnb.darts.models.ThrowNumber
+import de.trbnb.darts.models.ThrowState
+import de.trbnb.darts.models.description
+import de.trbnb.darts.models.get
+import de.trbnb.darts.models.plus
+import de.trbnb.darts.models.rawValue
+import de.trbnb.darts.models.value
 import de.trbnb.darts.utils.Triple
 import de.trbnb.darts.utils.map
 import de.trbnb.darts.vibration.Vibrator
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -29,17 +47,10 @@ class MatchViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    val info = logic.value?.state
-        ?.map { state ->
-            when {
-                state.turnState == TurnState.Bust -> "BUST" to R.color.info_text_red
-                state.currentParticipationStats.firstOrNull { it.player == state.currentPlayer }?.remainingPoints == 0 -> "WON" to R.color.info_text_green
-                else -> null
-            }
-        }
-
     fun confirmTurn() {
-        logic.value?.confirmTurn()
+        viewModelScope.launch(Dispatchers.IO) {
+            logic.value?.confirmTurn()
+        }
     }
 
     fun fallenOffChanged(throwNumber: ThrowNumber, fallenOff: Boolean) {
@@ -92,12 +103,23 @@ class MatchViewModel @Inject constructor(
                 InOutRule.MASTER -> "master out"
             }
         }
+
+        val pointsText = when {
+            matchState.currentTurn.run {
+                listOf(first, second, third).run {
+                    any { it == Field.TWENTY + Multiplier.SINGLE }
+                            && any { it == Field.FIVE + Multiplier.SINGLE }
+                            && any { it == Field.ONE + Multiplier.SINGLE }
+                }
+            } -> "DAS ÜBLICHE! \uD83E\uDD73"
+            else -> "${matchState.currentTurn.value} Punkte"
+        }
     }
 
     class ThrowInfo(
         val number: ThrowNumber,
         val isNextThrow: Boolean,
-        private val _throw: Throw?
+        val _throw: Throw?
     ) {
         val value: String get() = _throw?.rawValue?.toString() ?: "-"
         val description: String get() = _throw?.description ?: "-"

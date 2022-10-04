@@ -1,9 +1,31 @@
 package de.trbnb.darts.logic
 
 import de.trbnb.darts.logic.finish.FinishSuggestionLogic
-import de.trbnb.darts.models.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import de.trbnb.darts.models.InOutRule
+import de.trbnb.darts.models.LegParticipation
+import de.trbnb.darts.models.Match
+import de.trbnb.darts.models.MatchParticipation
+import de.trbnb.darts.models.ParticipationResult
+import de.trbnb.darts.models.Player
+import de.trbnb.darts.models.PlayerOrder
+import de.trbnb.darts.models.PlayerStartOrder
+import de.trbnb.darts.models.PotentialThrow
+import de.trbnb.darts.models.SetParticipation
+import de.trbnb.darts.models.Throw
+import de.trbnb.darts.models.ThrowNumber
+import de.trbnb.darts.models.ThrowState
+import de.trbnb.darts.models.Turn
+import de.trbnb.darts.models.value
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import java.util.*
 
 class MatchLogicImpl(
@@ -15,7 +37,7 @@ class MatchLogicImpl(
 
     override val finishSuggestionLogic = FinishSuggestionLogic(match.matchOptions.outRule)
 
-    private val _state = run<MutableStateFlow<StateImpl>> {
+    private val _state = run {
         val playerOrder = match.players.let { players ->
             when (match.matchOptions.playerStartOrder) {
                 PlayerStartOrder.AS_GIVEN -> players
@@ -23,25 +45,27 @@ class MatchLogicImpl(
             }
         }
         val turn = Turn()
+        val playerIndex = 0
         MutableStateFlow(
             StateImpl(
                 match = match,
-                currentPlayerIndex = 0,
+                currentPlayerIndex = playerIndex,
                 playerOrder = playerOrder,
                 currentTurn = turn,
-                suggestedFinishes = null
+                suggestedFinishes = when {
+                    !finishSuggestionLogic.isPossible(
+                        remainingPoints(playerOrder[playerIndex], turn),
+                        turn.remainingThrows
+                    ) -> emptyList()
+                    else -> {
+                        calcSuggestedFinishes()
+                        null
+                    }
+                }
             )
         )
     }
     override val state: StateFlow<MatchLogic.State> = _state.asStateFlow()
-
-    private var currentPlayerIndex: Int
-        get() = _state.value.currentPlayerIndex
-        set(value) {
-            _state.value = _state.value.copy(
-                currentPlayerIndex = if (value > match.players.lastIndex) 0 else value
-            )
-        }
 
     private var suggestionCalcJob: Job? = null
 
@@ -49,20 +73,24 @@ class MatchLogicImpl(
 
     private val previousTurns: Deque<Turn> = ArrayDeque()
 
-    init {
-        _state.distinctUntilChanged { old, new -> old.currentTurn == new.currentTurn }
-            .onEach { calcSuggestedFinish() }
-            .launchIn(this)
+    private fun nextPlayerIndex(): Int {
+        val nextIndex = _state.value.currentPlayerIndex + 1
+        return if (nextIndex > match.players.lastIndex) 0 else nextIndex
+    }
+
+    private fun prevoiusPlayerIndex(): Int {
+        return (_state.value.currentPlayerIndex - 1)
+            .takeUnless { it < 0 }
+            ?: match.players.lastIndex
     }
 
     private fun nextPlayer() {
-        currentPlayerIndex++
-
-        newTurn()
+        newTurn(playerIndex = nextPlayerIndex())
     }
 
-    private fun newTurn() {
+    private fun newTurn(playerIndex: Int = _state.value.currentPlayerIndex) {
         _state.value = _state.value.copy(
+            currentPlayerIndex = playerIndex,
             currentTurn = previousTurns.poll() ?: Turn()
         )
     }
@@ -81,6 +109,10 @@ class MatchLogicImpl(
 
     override fun remainingPoints(player: Player) = match.matchOptions.points - scoredPoints(player)
 
+    private fun remainingPoints(player: Player, turn: Turn): Int {
+        return remainingPoints(player) - turn.value
+    }
+
     private fun Turn.turnState(currentPlayer: Player): TurnState {
         return when {
             first?.state == ThrowState.BUST -> TurnState.Bust
@@ -94,8 +126,7 @@ class MatchLogicImpl(
         }
     }
 
-    private fun calcSuggestedFinish() {
-        suggestionCalcJob?.cancel()
+    private fun calcSuggestedFinishes() {
         suggestionCalcJob = launch {
             val turn = _state.value.currentTurn
             val remainingThrows = listOf(turn.first, turn.second, turn.third).count { it == null }
@@ -193,13 +224,12 @@ class MatchLogicImpl(
         if (legWon) {
             val playerOrder = _state.value.playerOrder
             _state.value = _state.value.copy(
+                currentPlayerIndex = 0,
                 playerOrder = when (match.matchOptions.playerOrder) {
                     PlayerOrder.SHUFFLE -> playerOrder.shuffled()
                     PlayerOrder.WORST_STARTS -> playerOrder.sortedByDescending(::remainingPoints)
                 }
             )
-
-            currentPlayerIndex = 0
         }
 
         when {
@@ -276,19 +306,12 @@ class MatchLogicImpl(
         return Turn(newFirst, newSecond, newThird)
     }
 
-    override fun canUndoTurnConfirmation(): Boolean {
-        val previousPlayerIndex = (currentPlayerIndex - 1).takeUnless { it < 0 } ?: match.players.lastIndex
-        val previousPlayer = _state.value.playerOrder[previousPlayerIndex]
-
-        val (_, leg) = currentParticipation(previousPlayer)
-
-        return leg.turns.isNotEmpty()
-    }
+    override fun canUndoTurnConfirmation() = _state.value.canUndoTurnConfirmation
 
     override fun undoTurnConfirmation() {
         if (!canUndoTurnConfirmation()) return
 
-        val previousPlayerIndex = (currentPlayerIndex - 1).takeUnless { it < 0 } ?: match.players.lastIndex
+        val previousPlayerIndex = prevoiusPlayerIndex()
 
         val (_, leg) = currentParticipation(_state.value.playerOrder[previousPlayerIndex])
 
@@ -300,8 +323,17 @@ class MatchLogicImpl(
             previousTurns.push(currentTurn)
         }
 
-        currentPlayerIndex = previousPlayerIndex
-        _state.value = _state.value.copy(currentTurn = lastTurn)
+        _state.value = _state.value.copy(
+            currentTurn = lastTurn,
+            currentPlayerIndex = previousPlayerIndex
+        )
+    }
+
+    private val Turn.remainingThrows get() = listOf(first, second, third).count { it == null }
+
+    private fun cancelFinishSuggestionJob() {
+        suggestionCalcJob?.cancel()
+        suggestionCalcJob = null
     }
 
     private inner class StateImpl(
@@ -324,22 +356,49 @@ class MatchLogicImpl(
             CurrentParticipationStatsImpl(player, match[player], set, leg, remainingPoints(player))
         }
 
-        override val canUndoTurnConfirmation: Boolean = canUndoTurnConfirmation()
+        override val canUndoTurnConfirmation: Boolean = run {
+            val previousPlayerIndex = (currentPlayerIndex - 1).takeUnless { it < 0 } ?: match.players.lastIndex
+            val previousPlayer = playerOrder[previousPlayerIndex]
+
+            return@run currentParticipationStats.first { it.player == previousPlayer }.currentLeg.turns.isNotEmpty()
+        }
 
         fun copy(
             currentPlayerIndex: Int = this.currentPlayerIndex,
             playerOrder: List<Player> = this.playerOrder,
             currentTurn: Turn = this.currentTurn,
-            suggestedFinishes: List<List<PotentialThrow>>? = this.suggestedFinishes
-        ): StateImpl = StateImpl(
-            match = match,
-            currentPlayerIndex = currentPlayerIndex,
-            playerOrder = playerOrder,
-            currentTurn = currentTurn,
-            suggestedFinishes = suggestedFinishes?.takeUnless {
-                this.currentTurn != currentTurn && this.suggestedFinishes === suggestedFinishes
+            suggestedFinishes: List<List<PotentialThrow>>? = null
+        ): StateImpl {
+            cancelFinishSuggestionJob()
+            val checkedFinishes = when {
+                suggestedFinishes != null -> suggestedFinishes
+                currentTurn == this.currentTurn -> this.suggestedFinishes
+                !finishSuggestionLogic.isPossible(
+                    remainingPoints(playerOrder[currentPlayerIndex], currentTurn),
+                    currentTurn.remainingThrows.takeUnless { it == 0 } ?: 3
+                ) -> emptyList()
+                else -> {
+                    calcSuggestedFinishes()
+                    null
+                }
             }
-        )
+
+            return StateImpl(
+                match = match,
+                currentPlayerIndex = currentPlayerIndex,
+                playerOrder = playerOrder,
+                currentTurn = currentTurn,
+                suggestedFinishes = checkedFinishes
+            )
+        }
+
+        override fun toString(): String {
+            return "StateImpl(" +
+                    "currentPlayerIndex = $currentPlayerIndex, " +
+                    "currentTurn = $currentTurn, " +
+                    "suggestedFinishes = $suggestedFinishes" +
+                    ")"
+        }
     }
 
     class CurrentParticipationStatsImpl(

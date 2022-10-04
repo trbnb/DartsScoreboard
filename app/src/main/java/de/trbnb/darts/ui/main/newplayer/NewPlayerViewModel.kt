@@ -22,7 +22,7 @@ class NewPlayerViewModel @Inject constructor(
 
         val (name, color) = uiState.value
         viewModelScope.launch {
-            playerRepository.create(name, color.toInt())
+            playerRepository.create(name, color)
             _uiState.value = _uiState.value.copy(shouldClose = true)
         }
     }

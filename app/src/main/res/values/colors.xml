@@ -26,4 +26,9 @@
     <color name="statusbarColor">@color/board_green</color>
 
     <color name="finishSuggestionBackground">#da2</color>
+
+    <color name="background">@color/white</color>
+
+    <bool name="isDarkTheme">false</bool>
+    <bool name="isLightTheme">true</bool>
 </resources>

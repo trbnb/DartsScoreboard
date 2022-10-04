@@ -3,4 +3,9 @@
     <color name="info_text_normal">@color/white</color>
 
     <color name="statusbarColor">@color/black</color>
+
+    <color name="background">@color/black</color>
+
+    <bool name="isDarkTheme">true</bool>
+    <bool name="isLightTheme">false</bool>
 </resources>

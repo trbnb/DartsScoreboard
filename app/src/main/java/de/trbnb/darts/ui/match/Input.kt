@@ -1,6 +1,21 @@
 package de.trbnb.darts.ui.match
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
@@ -9,11 +24,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.trbnb.darts.models.*
+import de.trbnb.darts.models.Field
+import de.trbnb.darts.models.Multiplier
+import de.trbnb.darts.models.Throw
+import de.trbnb.darts.models.plus
+import de.trbnb.darts.models.toField
 
 object BoardColors {
     val white = Color(0xFFD6BB90)
@@ -31,7 +50,7 @@ fun InputPreview() {
 @Composable
 fun Input(
     onThrow: (Throw) -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     Column(
         modifier.fillMaxWidth().padding(8.dp),
@@ -100,33 +119,36 @@ fun RowScope.FieldButton(field: Field, onClick: (Throw) -> Unit) {
         onClick = { onClick(field + Multiplier.SINGLE) },
         Modifier.weight(1f).fillMaxHeight(),
         contentPadding = PaddingValues(0.dp),
-        colors = ButtonDefaults.buttonColors(backgroundColor = BoardColors.white)
+        colors = ButtonDefaults.buttonColors(
+            backgroundColor = if (isSystemInDarkTheme()) BoardColors.black else BoardColors.white
+        ),
+        border = BorderStroke(0.5.dp, SolidColor(if (isSystemInDarkTheme()) BoardColors.white else Color.Transparent))
     ) {
         Column(
             Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Text(field.value.toString(), fontSize = 18.sp)
+                Text(
+                    field.value.toString(),
+                    fontSize = 18.sp,
+                    color = if (isSystemInDarkTheme()) BoardColors.white else Color.Black
+                )
             }
-            Row(Modifier.fillMaxWidth().height(40.dp).weight(1f)) {
-                Button(
-                    onClick = { onClick(field + Multiplier.DOUBLE) },
-                    Modifier.weight(1f).fillMaxHeight(),
-                    elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp, 0.dp),
-                    contentPadding = PaddingValues(0.dp),
-                    shape = RectangleShape,
-                    colors = ButtonDefaults.buttonColors(backgroundColor = BoardColors.green, contentColor = Color.White)
-                ) { Text ("D") }
 
-                Button(
-                    onClick = { onClick(field + Multiplier.TRIPLE) },
-                    Modifier.weight(1f).fillMaxHeight(),
-                    elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp, 0.dp),
-                    contentPadding = PaddingValues(0.dp),
-                    shape = RectangleShape,
-                    colors = ButtonDefaults.buttonColors(backgroundColor = BoardColors.red, contentColor = Color.White)
-                ) { Text ("T") }
+            Box(Modifier.height(1.dp).fillMaxWidth().background(Color.Black))
+            Row(Modifier.fillMaxWidth().fillMaxHeight(0.5f).weight(1f)) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.background(BoardColors.green).weight(1f).fillMaxHeight().clickable { onClick(field + Multiplier.DOUBLE) }
+                ) { Text ("D", color = Color.White) }
+
+                Box(Modifier.width(1.dp).fillMaxHeight().background(Color.Black))
+
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.background(BoardColors.red).weight(1f).fillMaxHeight().clickable { onClick(field + Multiplier.TRIPLE) }
+                ) { Text ("T", color = Color.White) }
             }
         }
     }

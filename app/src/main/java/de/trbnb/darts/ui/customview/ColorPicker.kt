@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.Slider
 import androidx.compose.material.SliderColors
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,7 +35,7 @@ fun ColorPicker(
         private val tickColor = mutableStateOf(Color.Black)
         private val trackColor = mutableStateOf(trackColor)
         @Composable
-        override fun thumbColor(enabled: Boolean) = derivedStateOf { color }
+        override fun thumbColor(enabled: Boolean) = trackColor
 
         @Composable
         override fun tickColor(enabled: Boolean, active: Boolean) = tickColor
