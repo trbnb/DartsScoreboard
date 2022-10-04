@@ -28,10 +28,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.trbnb.darts.logic.MatchLogic
-import de.trbnb.darts.models.Player
-import de.trbnb.darts.models.average
-import de.trbnb.darts.utils.average
+import de.trbnb.darts.domain.logic.MatchLogic
+import de.trbnb.darts.domain.models.average
+import de.trbnb.darts.domain.utils.average
+import de.trbnb.darts.persistence.database.models.Player
 
 @Composable
 fun PlayerParticipationList(

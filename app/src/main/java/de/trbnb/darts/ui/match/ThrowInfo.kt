@@ -37,15 +37,15 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.trbnb.darts.models.Field
-import de.trbnb.darts.models.Multiplier
-import de.trbnb.darts.models.Throw
-import de.trbnb.darts.models.ThrowNumber
-import de.trbnb.darts.models.ThrowState
-import de.trbnb.darts.models.value
-import de.trbnb.darts.utils.Triple
-import de.trbnb.darts.utils.forEach
-import de.trbnb.darts.utils.map
+import de.trbnb.darts.domain.models.Field
+import de.trbnb.darts.domain.models.Multiplier
+import de.trbnb.darts.domain.models.Throw
+import de.trbnb.darts.domain.models.ThrowNumber
+import de.trbnb.darts.domain.models.ThrowState
+import de.trbnb.darts.domain.models.value
+import de.trbnb.darts.domain.utils.Triple
+import de.trbnb.darts.domain.utils.forEach
+import de.trbnb.darts.domain.utils.map
 import kotlinx.coroutines.delay
 
 @Preview(backgroundColor = 0xFFFFFFFF, showBackground = true)

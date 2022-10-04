@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import de.trbnb.darts.models.InOutRule
+import de.trbnb.darts.domain.models.InOutRule
 import de.trbnb.darts.ui.main.newplayer.NewPlayerSheet
 import de.trbnb.darts.ui.match.BoardColors
 import de.trbnb.darts.ui.matchsetup.MatchSetupLayout

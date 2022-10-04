@@ -33,11 +33,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.trbnb.darts.logic.TurnState
-import de.trbnb.darts.models.Field
-import de.trbnb.darts.models.Multiplier
-import de.trbnb.darts.models.PotentialThrow
-import de.trbnb.darts.models.description
+import de.trbnb.darts.domain.logic.TurnState
+import de.trbnb.darts.domain.models.Field
+import de.trbnb.darts.domain.models.Multiplier
+import de.trbnb.darts.domain.models.PotentialThrow
+import de.trbnb.darts.domain.models.description
 
 @Preview(backgroundColor = 0xFFFFFFFF, showBackground = true)
 @Composable

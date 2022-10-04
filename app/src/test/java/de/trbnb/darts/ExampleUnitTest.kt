@@ -1,7 +1,7 @@
 package de.trbnb.darts
 
-import de.trbnb.darts.logic.finish.DoubleFinishSuggestionLogic
-import de.trbnb.darts.models.description
+import de.trbnb.darts.domain.logic.finish.DoubleFinishSuggestionLogic
+import de.trbnb.darts.domain.models.description
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
@@ -15,7 +15,7 @@ import org.junit.Test
 class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
-        val suggestionLogic = DoubleFinishSuggestionLogic()
+        val suggestionLogic = de.trbnb.darts.domain.logic.finish.DoubleFinishSuggestionLogic()
 
         (1..180).forEach { points ->
             suggestionLogic.getOne(points, 3)

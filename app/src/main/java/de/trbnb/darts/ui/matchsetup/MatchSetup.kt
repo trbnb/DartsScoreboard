@@ -30,8 +30,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.trbnb.darts.R
-import de.trbnb.darts.models.InOutRule
-import de.trbnb.darts.utils.infinity
+import de.trbnb.darts.domain.models.InOutRule
+import de.trbnb.darts.domain.utils.infinity
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable

@@ -48,9 +48,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import de.trbnb.darts.logic.TurnState
-import de.trbnb.darts.models.Throw
-import de.trbnb.darts.models.ThrowNumber
+import de.trbnb.darts.domain.logic.TurnState
+import de.trbnb.darts.domain.models.Throw
+import de.trbnb.darts.domain.models.ThrowNumber
 import de.trbnb.darts.ui.navigation.LocalNavController
 
 @Composable

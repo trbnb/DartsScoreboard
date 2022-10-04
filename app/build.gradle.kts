@@ -15,15 +15,6 @@ android {
         versionName = "1.0"
 
         //testInstrumentationRunner("androidx.test.runner.AndroidJUnitRunner")
-
-        javaCompileOptions {
-            annotationProcessorOptions {
-                arguments["room.schemaLocation"] = "$projectDir/schemas"
-                arguments["room.incremental"] = "true"
-                arguments["room.expandProjection"] = "true"
-            }
-        }
-
     }
 
     buildTypes {
@@ -54,19 +45,18 @@ kapt {
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
-    implementation(kotlin("reflect"))
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.5.1")
+
+    implementation(project(":domain"))
 
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    debugImplementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 
-    implementation("androidx.core:core-ktx:1.8.0")
-    implementation("androidx.appcompat:appcompat:1.5.0")
+    implementation("androidx.core:core-ktx:1.9.0")
+    implementation("androidx.appcompat:appcompat:1.5.1")
     implementation("com.google.android.material:material:1.6.1")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.3")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 
     implementation("com.google.dagger:hilt-android:${Versions.daggerHilt}")
     kapt("com.google.dagger:hilt-android-compiler:${Versions.daggerHilt}")
@@ -77,7 +67,7 @@ dependencies {
     implementation("androidx.compose.ui:ui:${Versions.compose}")
     implementation("androidx.compose.material:material:${Versions.compose}")
     implementation("androidx.compose.ui:ui-tooling:${Versions.compose}")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.0-alpha01")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.0-alpha02")
 
     implementation("androidx.compose.ui:ui:${Versions.compose}")
     // Tooling support (Previews, etc.)
@@ -90,7 +80,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-core:${Versions.compose}")
     implementation("androidx.compose.material:material-icons-extended:${Versions.compose}")
     // Integration with activities
-    implementation("androidx.activity:activity-compose:1.5.1")
+    implementation("androidx.activity:activity-compose:1.6.0")
     // Integration with ViewModels
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1")
     // Integration with observables
@@ -100,17 +90,8 @@ dependencies {
     // UI Tests
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:${Versions.compose}")
 
-    implementation("androidx.room:room-runtime:${Versions.room}")
-    kapt("androidx.room:room-compiler:${Versions.room}")
-    // optional - Kotlin Extensions and Coroutines support for Room
-    implementation("androidx.room:room-ktx:${Versions.room}")
-
-    implementation("com.github.madrapps:pikolo:2.0.1")
-
-    implementation("de.hdodenhof:circleimageview:3.1.0")
-
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1")
-    implementation("androidx.fragment:fragment-ktx:1.5.2")
-    implementation("androidx.navigation:navigation-fragment-ktx:2.5.1")
-    implementation("androidx.navigation:navigation-ui-ktx:2.5.1")
+    implementation("androidx.fragment:fragment-ktx:1.5.3")
+    implementation("androidx.navigation:navigation-fragment-ktx:2.5.2")
+    implementation("androidx.navigation:navigation-ui-ktx:2.5.2")
 }

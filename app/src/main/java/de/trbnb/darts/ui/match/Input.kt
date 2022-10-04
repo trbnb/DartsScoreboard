@@ -28,11 +28,11 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.trbnb.darts.models.Field
-import de.trbnb.darts.models.Multiplier
-import de.trbnb.darts.models.Throw
-import de.trbnb.darts.models.plus
-import de.trbnb.darts.models.toField
+import de.trbnb.darts.domain.models.Field
+import de.trbnb.darts.domain.models.Multiplier
+import de.trbnb.darts.domain.models.Throw
+import de.trbnb.darts.domain.models.plus
+import de.trbnb.darts.domain.models.toField
 
 object BoardColors {
     val white = Color(0xFFD6BB90)
