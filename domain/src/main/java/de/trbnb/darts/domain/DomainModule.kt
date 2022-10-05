@@ -5,6 +5,8 @@ import dagger.Module
 import dagger.hilt.migration.DisableInstallInCheck
 import de.trbnb.darts.domain.logic.MatchFactory
 import de.trbnb.darts.domain.logic.MatchFactoryImpl
+import de.trbnb.darts.domain.mapping.player.PlayerMapper
+import de.trbnb.darts.domain.mapping.player.PlayerMapperImpl
 import de.trbnb.darts.domain.players.PlayerRepository
 import de.trbnb.darts.domain.players.PlayerRepositoryImpl
 import de.trbnb.darts.domain.vibration.Vibrator
@@ -26,4 +28,7 @@ interface DomainModule {
     @Binds
     @Singleton
     fun playerRepository(impl: PlayerRepositoryImpl): PlayerRepository
+
+    @Binds
+    fun playerMapper(impl: PlayerMapperImpl): PlayerMapper
 }

@@ -6,6 +6,7 @@ import de.trbnb.darts.domain.models.LegParticipation
 import de.trbnb.darts.domain.models.Match
 import de.trbnb.darts.domain.models.MatchParticipation
 import de.trbnb.darts.domain.models.ParticipationResult
+import de.trbnb.darts.domain.models.Player
 import de.trbnb.darts.domain.models.PlayerOrder
 import de.trbnb.darts.domain.models.PlayerStartOrder
 import de.trbnb.darts.domain.models.PotentialThrow
@@ -15,7 +16,6 @@ import de.trbnb.darts.domain.models.ThrowNumber
 import de.trbnb.darts.domain.models.ThrowState
 import de.trbnb.darts.domain.models.Turn
 import de.trbnb.darts.domain.models.value
-import de.trbnb.darts.persistence.database.models.Player
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,7 +26,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.ArrayDeque
+import java.util.Deque
 
 class MatchLogicImpl(
     override val match: Match,

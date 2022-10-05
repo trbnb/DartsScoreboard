@@ -4,12 +4,12 @@ import de.trbnb.darts.domain.logic.finish.FinishSuggestionLogic
 import de.trbnb.darts.domain.models.LegParticipation
 import de.trbnb.darts.domain.models.Match
 import de.trbnb.darts.domain.models.MatchParticipation
+import de.trbnb.darts.domain.models.Player
 import de.trbnb.darts.domain.models.PotentialThrow
 import de.trbnb.darts.domain.models.SetParticipation
 import de.trbnb.darts.domain.models.Throw
 import de.trbnb.darts.domain.models.ThrowNumber
 import de.trbnb.darts.domain.models.Turn
-import de.trbnb.darts.persistence.database.models.Player
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.flow.StateFlow
 

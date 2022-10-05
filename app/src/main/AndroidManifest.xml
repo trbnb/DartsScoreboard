@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Darts">
 
-        <activity android:name=".ui.Activity"
+        <activity android:name=".app.Activity"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

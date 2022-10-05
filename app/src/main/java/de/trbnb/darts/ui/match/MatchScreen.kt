@@ -143,7 +143,6 @@ private fun MatchScreenLayout(
             uiState = uiState,
             onFallenOffChanged = onFallenOffChanged,
             onDeleteThrow = onDeleteThrow,
-            onConfirmTurn = onConfirmTurn,
             modifier = Modifier.fillMaxWidth().height(136.dp)
         )
         RemainingOverview(uiState)

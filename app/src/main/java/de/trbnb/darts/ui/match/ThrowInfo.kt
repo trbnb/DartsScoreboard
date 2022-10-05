@@ -42,7 +42,6 @@ import de.trbnb.darts.domain.models.Multiplier
 import de.trbnb.darts.domain.models.Throw
 import de.trbnb.darts.domain.models.ThrowNumber
 import de.trbnb.darts.domain.models.ThrowState
-import de.trbnb.darts.domain.models.value
 import de.trbnb.darts.domain.utils.Triple
 import de.trbnb.darts.domain.utils.forEach
 import de.trbnb.darts.domain.utils.map
@@ -71,9 +70,7 @@ fun ThrowInfoPreview() {
                 )
             )
         },
-        currentTurnValue = 62,
-        isConfirmTurnAvailable = enabledState,
-        {_, _ ->}, {}, {}
+        {_, _ ->}, {},
     )
 }
 
@@ -82,16 +79,12 @@ fun ThrowInfoRow(
     uiState: MatchViewModel.UiState,
     onFallenOffChanged: (ThrowNumber, Boolean) -> Unit,
     onDeleteThrow: (ThrowNumber) -> Unit,
-    onConfirmTurn: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     ThrowInfoRow(
         throwInfos = uiState.throwInfos,
-        currentTurnValue = uiState.currentTurn.value,
-        isConfirmTurnAvailable = uiState.isConfirmTurnAvailable,
         onFallenOffChanged = onFallenOffChanged,
         onDeleteThrow = onDeleteThrow,
-        onConfirmTurn = onConfirmTurn,
         modifier = modifier
     )
 }
@@ -99,11 +92,8 @@ fun ThrowInfoRow(
 @Composable
 fun ThrowInfoRow(
     throwInfos: Triple<MatchViewModel.ThrowInfo>,
-    currentTurnValue: Int,
-    isConfirmTurnAvailable: Boolean,
     onFallenOffChanged: (ThrowNumber, Boolean) -> Unit,
     onDeleteThrow: (ThrowNumber) -> Unit,
-    onConfirmTurn: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(modifier) {

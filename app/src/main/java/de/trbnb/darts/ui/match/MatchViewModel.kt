@@ -21,6 +21,7 @@ import de.trbnb.darts.domain.utils.Triple
 import de.trbnb.darts.domain.utils.map
 import de.trbnb.darts.domain.vibration.Vibrator
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -40,6 +41,7 @@ class MatchViewModel @Inject constructor(
 ) : ViewModel() {
     val logic = matchFactory.currentMatch
 
+    @OptIn(FlowPreview::class)
     val matchState = matchFactory.currentMatch
         .flatMapConcat { matchLogic ->
             matchLogic?.state?.map { UiState(it) }

@@ -6,10 +6,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import de.trbnb.darts.domain.logic.MatchFactory
 import de.trbnb.darts.domain.models.InOutRule
 import de.trbnb.darts.domain.models.MatchOptions
+import de.trbnb.darts.domain.models.Player
 import de.trbnb.darts.domain.models.PlayerOrder
 import de.trbnb.darts.domain.models.PlayerStartOrder
 import de.trbnb.darts.domain.players.PlayerRepository
-import de.trbnb.darts.persistence.database.models.Player
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn

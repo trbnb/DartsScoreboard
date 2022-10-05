@@ -1,4 +1,4 @@
-package de.trbnb.darts.utils
+package de.trbnb.darts.ui.utils
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalDensity

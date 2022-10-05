@@ -1,4 +1,4 @@
-package de.trbnb.darts.ui
+package de.trbnb.darts.app
 
 import android.os.Bundle
 import androidx.activity.compose.setContent

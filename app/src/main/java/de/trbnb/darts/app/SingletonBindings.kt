@@ -1,4 +1,4 @@
-package de.trbnb.darts.di
+package de.trbnb.darts.app
 
 import dagger.Module
 import dagger.hilt.InstallIn

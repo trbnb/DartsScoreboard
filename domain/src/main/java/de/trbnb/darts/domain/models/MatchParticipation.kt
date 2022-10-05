@@ -1,6 +1,6 @@
 package de.trbnb.darts.domain.models
 
-class MatchParticipation(val player: de.trbnb.darts.persistence.database.models.Player) {
+class MatchParticipation(val player: Player) {
     private val _sets: MutableList<SetParticipation> = mutableListOf(SetParticipation())
 
     var result: ParticipationResult = ParticipationResult.RUNNING

@@ -2,10 +2,10 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "2e9180b65f34e2090919b9d811d10a52",
+    "identityHash": "98e766cab1fe2f9c10eb7e4713cf4186",
     "entities": [
       {
-        "tableName": "Player",
+        "tableName": "player",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `color` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
@@ -40,7 +40,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2e9180b65f34e2090919b9d811d10a52')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '98e766cab1fe2f9c10eb7e4713cf4186')"
     ]
   }
 }

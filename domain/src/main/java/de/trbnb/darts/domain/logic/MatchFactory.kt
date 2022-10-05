@@ -1,7 +1,7 @@
 package de.trbnb.darts.domain.logic
 
 import de.trbnb.darts.domain.models.MatchOptions
-import de.trbnb.darts.persistence.database.models.Player
+import de.trbnb.darts.domain.models.Player
 import kotlinx.coroutines.flow.StateFlow
 
 interface MatchFactory {
